@@ -116,7 +116,7 @@ export function DashboardPage({
       </section>
       <section className="dashboard-route">
         <div className="section-intro">
-          <span>03 / DEL REGISTRO AL DEMO DAY</span>
+          <span>03 / DEL ACCESO A LA CERTIFICACIÓN</span>
           <h2>Una ruta. Tres hitos.</h2>
         </div>
         <div className="dashboard-hits">
@@ -137,7 +137,7 @@ export function DashboardPage({
       <section className="automaton-invite">
         <div className="invite-orb" />
         <div>
-          <span>TEORÍA DE LA COMPUTACIÓN / UNIDAD 5</span>
+          <span>TEORÍA DE LA COMPUTACIÓN / PROYECTO FINAL</span>
           <h2>La teoría también se ve.</h2>
           <p>
             Explora estados, transiciones y cadenas en el simulador visual del Autómata Finito
