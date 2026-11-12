@@ -14,6 +14,7 @@ import {
 } from "../../model/platform";
 import { icons } from "../components/icons";
 import type { ReactNode } from "react";
+import { UserPanel } from "../components/UserPanel";
 import { AutomatonDiagram } from "../components/AutomatonDiagram";
 
 type Action = (name: string, args: Record<string, unknown>) => Promise<void>;
@@ -629,42 +630,116 @@ function RoleManager({
   profile: Profile;
   action: Action;
 }) {
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("todos");
+  const [drafts, setDrafts] = useState<Record<string, Role>>({});
+  const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
+  const visible = people.filter(
+    (p) =>
+      `${p.display_name} ${p.email}`.toLowerCase().includes(search.toLowerCase()) &&
+      (roleFilter === "todos" || p.role === roleFilter),
+  );
   return (
-    <details className="history-card">
-      <summary>Administrar usuarios y roles</summary>
-      <p>Las cuentas nuevas son estudiantes. Asigna aquí los asesores del evento.</p>
-      <p role="status">{notice}</p>
-      <div className="portal-people">
-        {people.map((person) => (
-          <label key={person.id}>
-            <b>{person.display_name}</b>
-            <span>{person.email}</span>
-            <select
-              aria-label={`Rol de ${person.display_name}`}
-              disabled={person.id === profile.id}
-              value={person.role}
-              onChange={async (event) => {
-                try {
-                  await action("set_user_role", {
-                    p_user_id: person.id,
-                    p_role: event.target.value as Role,
-                  });
-                  setNotice("Rol actualizado.");
-                } catch (error) {
-                  setNotice(error instanceof Error ? error.message : "No se pudo cambiar el rol.");
-                }
-              }}
-            >
-              {Object.entries(roleNames).map(([value, name]) => (
-                <option key={value} value={value}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-        ))}
+    <details className="history-card role-manager" open>
+      <summary>
+        Administrar usuarios y roles <span>{people.length} cuentas</span>
+      </summary>
+      <p>
+        Las cuentas nuevas son estudiantes. Selecciona el rol y pulsa Guardar para aplicar el
+        cambio.
+      </p>
+      <div className="role-toolbar">
+        <label>
+          Buscar usuario
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Nombre o correo"
+          />
+        </label>
+        <label>
+          Filtrar por rol
+          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+            <option value="todos">Todos los roles</option>
+            {Object.entries(roleNames).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
+      <p role="status">{notice}</p>
+      <div className="role-table-scroll">
+        <table className="role-table">
+          <caption>{visible.length} usuarios encontrados</caption>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Contacto</th>
+              <th>Rol</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((person) => (
+              <tr key={person.id}>
+                <td>
+                  <strong>{person.display_name}</strong>
+                  {person.id === profile.id && <small>Tu cuenta</small>}
+                </td>
+                <td>{person.email}</td>
+                <td>
+                  <select
+                    aria-label={`Rol de ${person.display_name}`}
+                    disabled={person.id === profile.id || !!busy}
+                    value={drafts[person.id] ?? person.role}
+                    onChange={(e) => setDrafts({ ...drafts, [person.id]: e.target.value as Role })}
+                  >
+                    {Object.entries(roleNames).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <button
+                    className="button-secondary"
+                    disabled={
+                      person.id === profile.id ||
+                      !!busy ||
+                      !drafts[person.id] ||
+                      drafts[person.id] === person.role
+                    }
+                    onClick={async () => {
+                      setBusy(person.id);
+                      setNotice("");
+                      try {
+                        await action("set_user_role", {
+                          p_user_id: person.id,
+                          p_role: drafts[person.id],
+                        });
+                        setNotice(`Rol actualizado: ${person.display_name}.`);
+                      } catch (e) {
+                        setNotice(e instanceof Error ? e.message : "No se pudo cambiar el rol.");
+                      } finally {
+                        setBusy("");
+                      }
+                    }}
+                    aria-label={`Guardar rol de ${person.display_name}`}
+                  >
+                    {busy === person.id ? "Guardando…" : "Guardar"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {!visible.length && <p>No hay usuarios con estos filtros.</p>}
     </details>
   );
 }
@@ -841,75 +916,31 @@ export function PlatformPage({
 
   if (mode === "panel")
     return (
-      <section className="portal personal-panel">
-        <div className="portal-heading">
-          <div>
-            <p>{roleNames[profile.role]}</p>
-            <h1>Hola, {profile.display_name}</h1>
-            <p>Tu cuenta, tus accesos y el resumen del evento.</p>
-          </div>
-          <button
-            className="button-secondary"
-            onClick={async () => {
-              const result = await cloud!.auth.signOut();
-              if (result.error) setNotice(result.error.message);
-            }}
-          >
-            Cerrar sesión
-          </button>
-        </div>
-        <p role="alert">{platform.error || notice}</p>
-        <div className="account-summary history-card">
-          <span className="registration-seal">
-            {profile.display_name.slice(0, 1).toUpperCase()}
-          </span>
-          <div>
-            <h2>Mi cuenta</h2>
-            <p>{profile.display_name}</p>
-            <p>{profile.email}</p>
-            <p>{roleNames[profile.role]}</p>
-          </div>
-        </div>
-        <div className="portal-stats">
-          <div>
-            <strong>{teams.length}</strong>
-            <span>{profile.role === "advisor" ? "Equipos asignados" : "Equipos"}</span>
-          </div>
-          <div>
-            <strong>{submissions.filter((item) => item.status === "pending").length}</strong>
-            <span>Entregas por revisar</span>
-          </div>
-          <div>
-            <strong>{teams.filter((item) => item.chain === "RMP").length}</strong>
-            <span>Certificados</span>
-          </div>
-        </div>
-        <div className="panel-shortcuts">
-          <article className="history-card">
-            <h2>Registro del equipo</h2>
-            <p>
-              {profile.role === "student"
-                ? teams.length
-                  ? "Consulta el registro de tu equipo y continúa sus etapas."
-                  : "Prepara los datos y registra tu equipo en el evento."
-                : "Cada estudiante registra su equipo desde su cuenta."}
-            </p>
-            <button className="button-primary" onClick={() => onNavigate?.("registro")}>
-              Ir a Registro
-            </button>
-          </article>
-          <article className="history-card">
-            <h2>Entregas y revisiones</h2>
-            <p>Abre Seguimiento para consultar etapas, mentorías, prototipos y observaciones.</p>
-            <button className="button-primary" onClick={() => onNavigate?.("equipos")}>
-              Ir a Seguimiento
-            </button>
-          </article>
-        </div>
-        {profile.role === "organizer" && (
-          <RoleManager people={people} profile={profile} action={action} />
+      <UserPanel
+        key={profile.id + profile.role}
+        profile={profile}
+        teams={teams}
+        submissions={submissions}
+        error={platform.error || notice}
+        roles={<RoleManager people={people} profile={profile} action={action} />}
+        onRegister={() => onNavigate?.("registro")}
+        onTracking={() => onNavigate?.("equipos")}
+        onLogout={() =>
+          void cloud!.auth.signOut().then((result) => {
+            if (result.error) setNotice(result.error.message);
+          })
+        }
+        renderTeam={(team) => (
+          <TeamPanel
+            key={team.id}
+            team={team}
+            profile={profile}
+            submissions={submissions.filter((s) => s.team_id === team.id)}
+            people={people}
+            action={action}
+          />
         )}
-      </section>
+      />
     );
 
   const filtered = teams.filter(
