@@ -12,6 +12,8 @@ import {
   type Submission,
   type Role,
 } from "../../model/platform";
+import { icons } from "../components/icons";
+import type { ReactNode } from "react";
 import { AutomatonDiagram } from "../components/AutomatonDiagram";
 
 type Action = (name: string, args: Record<string, unknown>) => Promise<void>;
@@ -157,84 +159,207 @@ function registrationDraft() {
     return { name: "", category: "", members: 3 };
   }
 }
-function CreateTeam({ action, requestLogin }: { action?: Action; requestLogin?: () => void }) {
+function RegistrationLayout({
+  children,
+  onAutomaton,
+}: {
+  children: ReactNode;
+  onAutomaton: () => void;
+}) {
+  return (
+    <div className="registration-page restored-registration">
+      <div className="registration-decoration" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <section className="registration-hero">
+        <div className="registration-context">
+          <div className="eyebrow">
+            <span /> REGISTRO / PASE DE EQUIPO
+          </div>
+          <h1>Tu equipo empieza aquí.</h1>
+          <p>
+            Completa los datos para guardar el pase de registro y continuar con la mentoría y el
+            prototipo.
+          </p>
+          <div className="registration-requirements">
+            <b>01 · Registra</b>
+            <p>Identifica al equipo y a su representante.</p>
+            <b>02 · Participa</b>
+            <p>Confirma la mentoría y prepara tu entrega.</p>
+            <b>03 · Certifica</b>
+            <p>Completa el recorrido R → M → P.</p>
+          </div>
+        </div>
+        <div>{children}</div>
+      </section>
+      <section className="access-flow">
+        <div className="flow-heading">
+          <span>02 / RUTA DE ACCESO</span>
+          <h2>Un pase. Tres hitos.</h2>
+          <p>El recorrido de cada equipo se valida de forma ordenada durante el evento.</p>
+        </div>
+        {[
+          ["R", "Registro", "Acreditación e identidad del equipo"],
+          ["M", "Mentoría", "Validación de asistencia técnica"],
+          ["P", "Prototipo", "Entrega final y certificación"],
+        ].map(([letter, title, description], index) => (
+          <article className="flow-card" key={letter}>
+            <span>0{index + 1}</span>
+            <b>{letter}</b>
+            <h3>{title}</h3>
+            <p>{description}</p>
+          </article>
+        ))}
+      </section>
+      <section className="automaton-invite">
+        <div className="invite-orb" aria-hidden="true" />
+        <div>
+          <span>MODO EDUCATIVO / TEORÍA DE LA COMPUTACIÓN</span>
+          <h2>¿Qué ocurre detrás de cada acceso?</h2>
+          <p>
+            Explora el Autómata Finito Determinista que modela la secuencia completa de HackaFlow.
+          </p>
+        </div>
+        <button onClick={onAutomaton}>
+          {icons.nodes}Visualizar el autómata{icons.arrow}
+        </button>
+      </section>
+    </div>
+  );
+}
+function CreateTeam({
+  action,
+  requestLogin,
+  profile,
+}: {
+  action?: Action;
+  requestLogin?: () => void;
+  profile?: Profile;
+}) {
   const [draft] = useState(registrationDraft);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   return (
-    <form
-      className="portal-form history-card"
-      onChange={(event) => {
-        const form = new FormData(event.currentTarget);
-        try {
-          sessionStorage.setItem(
-            "hackaflow.registrationDraft",
-            JSON.stringify({
-              name: form.get("name"),
-              category: form.get("category"),
-              members: form.get("members"),
-            }),
-          );
-        } catch {
-          /* El formulario sigue disponible. */
-        }
-      }}
-      onSubmit={async (event) => {
-        event.preventDefault();
-        const form = new FormData(event.currentTarget);
-        if (requestLogin) {
-          requestLogin();
-          return;
-        }
-        if (!action) return;
-        setBusy(true);
-        try {
-          await action("register_event_team", {
-            p_name: String(form.get("name")),
-            p_category: String(form.get("category")),
-            p_members: Number(form.get("members")),
-          });
+    <section className="registration-panel">
+      <div className="panel-number">REG / 001</div>
+      <div className="registration-heading">
+        <span>{icons.ticket}</span>
+        <div>
+          <p>NUEVO REGISTRO</p>
+          <h2>Registra tu equipo</h2>
+        </div>
+      </div>
+      <form
+        onChange={(event) => {
+          const form = new FormData(event.currentTarget);
           try {
-            sessionStorage.removeItem("hackaflow.registrationDraft");
+            sessionStorage.setItem(
+              "hackaflow.registrationDraft",
+              JSON.stringify({
+                name: form.get("name"),
+                category: form.get("category"),
+                members: form.get("members"),
+              }),
+            );
           } catch {
-            /* Registro completado. */
+            /* El formulario sigue disponible. */
           }
-        } catch (error) {
-          setError(error instanceof Error ? error.message : "No se pudo registrar.");
-        } finally {
-          setBusy(false);
-        }
-      }}
-    >
-      <h2>Registra tu equipo</h2>
-      <p>
-        Tu cuenta representa al equipo. Su registro activa R; la mentoría y el prototipo necesitan
-        aprobación.
-      </p>
-      <label>
-        Nombre
-        <input name="name" required maxLength={100} defaultValue={draft.name} />
-      </label>
-      <label>
-        Categoría
-        <input name="category" required maxLength={100} defaultValue={draft.category} />
-      </label>
-      <label>
-        Integrantes
-        <input
-          name="members"
-          type="number"
-          min={1}
-          max={10}
-          defaultValue={draft.members}
-          required
-        />
-      </label>
-      <button className="button-primary" disabled={busy}>
-        {requestLogin ? "Continuar e iniciar sesión" : "Guardar registro (R)"}
-      </button>
-      <p role="alert">{error}</p>
-    </form>
+        }}
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const form = new FormData(event.currentTarget);
+          if (requestLogin) {
+            requestLogin();
+            return;
+          }
+          if (!action) return;
+          setBusy(true);
+          try {
+            await action("register_event_team", {
+              p_name: String(form.get("name")),
+              p_category: String(form.get("category")),
+              p_members: Number(form.get("members")),
+            });
+            try {
+              sessionStorage.removeItem("hackaflow.registrationDraft");
+            } catch {
+              /* Registro completado. */
+            }
+          } catch (error) {
+            setError(error instanceof Error ? error.message : "No se pudo registrar.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <label>
+          Nombre del equipo
+          <input
+            name="name"
+            placeholder="Ej. Binary Rebels"
+            required
+            maxLength={100}
+            defaultValue={draft.name}
+          />
+        </label>
+        <div className="form-row">
+          <label>
+            Líder del equipo
+            <input
+              value={profile?.display_name ?? ""}
+              readOnly
+              placeholder="Nombre completo al iniciar sesión"
+            />
+          </label>
+          <label>
+            Integrantes
+            <select name="members" defaultValue={draft.members}>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n}>{n}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <label>
+          Correo de contacto
+          <input
+            type="email"
+            value={profile?.email ?? ""}
+            readOnly
+            placeholder="Correo de tu cuenta al iniciar sesión"
+          />
+        </label>
+        <label>
+          Categoría de participación
+          <select name="category" required defaultValue={draft.category || "Innovación social"}>
+            {[
+              "Innovación social",
+              "Inteligencia artificial",
+              "Ciudades inteligentes",
+              "Tecnología educativa",
+            ].map((category) => (
+              <option key={category}>{category}</option>
+            ))}
+          </select>
+        </label>
+        <label className="consent">
+          <input type="checkbox" required />
+          Acepto el reglamento y autorizo el registro del equipo.
+        </label>
+        <button className="generate-pass" disabled={busy}>
+          {busy ? "Guardando…" : "Guardar registro"}
+          {icons.arrow}
+        </button>
+        <p className="secure-note">
+          {profile
+            ? "Representante y contacto vinculados a tu cuenta verificada."
+            : "Inicia sesión al continuar para vincular al representante y guardar el equipo."}
+        </p>
+        <p role="alert">{error}</p>
+      </form>
+    </section>
   );
 }
 function SubmitStage({ team, action }: { team: EventTeam; action: Action }) {
@@ -556,7 +681,7 @@ export function PlatformPage({
   onNavigate,
 }: {
   mode?: "panel" | "registro" | "seguimiento";
-  onNavigate?: (section: "registro" | "equipos" | "plataforma") => void;
+  onNavigate?: (section: "registro" | "equipos" | "plataforma" | "automata") => void;
 }) {
   const platform = usePlatform();
   const [registrationAuth, setRegistrationAuth] = useState(false);
@@ -586,25 +711,7 @@ export function PlatformPage({
   if (!platform.session) {
     if (mode === "registro")
       return (
-        <div className="shared-registration">
-          <section className="registration-context">
-            <div className="eyebrow">
-              <span /> REGISTRO DE EQUIPO
-            </div>
-            <h1>Tu equipo empieza aquí.</h1>
-            <p>
-              Prepara los datos del equipo. Para guardarlos en el evento, confirma tu identidad
-              iniciando sesión o creando una cuenta.
-            </p>
-            <div className="registration-requirements">
-              <b>01 · Identifica tu equipo</b>
-              <p>Nombre, categoría e integrantes.</p>
-              <b>02 · Confirma tu cuenta</b>
-              <p>Tu cuenta será la representante del equipo.</p>
-              <b>03 · Continúa el recorrido</b>
-              <p>Envía mentoría y prototipo al asesor.</p>
-            </div>
-          </section>
+        <RegistrationLayout onAutomaton={() => onNavigate?.("automata")}>
           <div>
             {registrationAuth ? (
               <>
@@ -617,7 +724,7 @@ export function PlatformPage({
               <CreateTeam requestLogin={() => setRegistrationAuth(true)} />
             )}
           </div>
-        </div>
+        </RegistrationLayout>
       );
     if (mode === "seguimiento")
       return (
@@ -671,25 +778,7 @@ export function PlatformPage({
   const { profile, teams, submissions, people, action } = platform;
   if (mode === "registro")
     return (
-      <div className="shared-registration">
-        <section className="registration-context">
-          <div className="eyebrow">
-            <span /> REGISTRO DE EQUIPO
-          </div>
-          <h1>Tu equipo empieza aquí.</h1>
-          <p>
-            Tu identidad ya está confirmada como {profile.display_name}. Guarda el equipo en la
-            plataforma para recibir seguimiento de tu asesor.
-          </p>
-          <div className="registration-requirements">
-            <b>01 · Registro</b>
-            <p>Una cuenta representante y un equipo.</p>
-            <b>02 · Mentoría</b>
-            <p>Envía tu actividad para que el asesor la revise.</p>
-            <b>03 · Prototipo</b>
-            <p>Entrega tu enlace y completa la certificación.</p>
-          </div>
-        </section>
+      <RegistrationLayout onAutomaton={() => onNavigate?.("automata")}>
         <div>
           {profile.role !== "student" ? (
             <section className="history-card">
@@ -713,10 +802,10 @@ export function PlatformPage({
               </button>
             </section>
           ) : (
-            <CreateTeam action={action} />
+            <CreateTeam action={action} profile={profile} />
           )}
         </div>
-      </div>
+      </RegistrationLayout>
     );
 
   if (mode === "panel")
