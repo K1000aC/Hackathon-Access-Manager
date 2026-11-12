@@ -23,3 +23,17 @@ El archivo de accesos se guarda antes de crear usuarios y después de cada avanc
 La plantilla de correos de registro se puede diseñar después de validar el flujo; este script no cambia el correo ni su configuración.
 
 Referencia: [API administrativa createUser](https://supabase.com/docs/reference/javascript/auth-admin-createuser).
+
+## QA autenticado en producción
+
+El script `backend/scripts/qa-live-flow.mjs` ejecuta el recorrido real con student01 y advisor01. Es opt-in: no forma parte de `npm test` ni de `npm run test:e2e` porque crea entregas y aprobaciones en el proyecto compartido.
+
+```sh
+node --env-file=backend/.env.qa.local backend/scripts/qa-live-flow.mjs
+```
+
+Usa la cuenta administrativa solo para preparar la asignación del equipo QA; el registro, envíos, correcciones y aprobaciones se realizan con sesiones de estudiante y asesor en navegador. No prueba la interfaz de asignación de la organizadora. El estudiante usa Chromium con pantalla móvil y el asesor Chromium de escritorio; no son dispositivos físicos.
+
+La ejecución del 12 de noviembre de 2026 completó registro → mentoría pendiente → correcciones → reenvío → aprobación → prototipo pendiente → aprobación → certificación q3. Conservó el historial y verificó la constancia después de recargar. Usa una URL ficticia de example.com para la entrega de QA.
+
+Resultados privados: `backend/.local/qa-live-report.json` y `backend/.local/qa-live-certified.png`. No se guardan trazas ni vídeos de inicio de sesión. El script conserva datos existentes: si el equipo ya avanzó, se detiene y no lo reinicia. Por tanto, una vez completado el recorrido, no se debe esperar que repetir el comando vuelva a realizar las etapas desde cero.

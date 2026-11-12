@@ -5,20 +5,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("navegación: inicio, operación local y vista educativa", async ({ page }) => {
-  await expect(
-    page.getByRole("heading", { name: /^(Iniciar sesión|Paneles de estudiantes y asesores)$/ }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: /ENTRA/ })).toBeVisible();
   await expect(page).toHaveTitle("HackaFlow | Control de accesos");
   await expect(page.getByRole("navigation", { name: "Navegación principal" })).toBeVisible();
-  for (const name of [
-    "Mi panel",
-    "Registro local",
-    "Modelo AFD",
-    "Seguimiento local",
-    "El proyecto",
-  ]) {
+  for (const name of ["Mi panel", "Registro local", "Modelo AFD", "Seguimiento local", "Inicio"]) {
     await expect(
-      page.getByRole("navigation").getByRole("button", { name, exact: true }),
+      page
+        .getByRole("navigation", { name: "Navegación principal" })
+        .getByRole("button", { name, exact: true }),
     ).toBeVisible();
   }
   await navigate(page, "Registro local");
@@ -30,12 +24,14 @@ test("navegación: inicio, operación local y vista educativa", async ({ page })
   await expect(page.getByText("M = (Q, Σ, δ, q₀, F)", { exact: true })).toBeVisible();
   await navigate(page, "Seguimiento local");
   await expect(page.getByRole("heading", { name: "Equipos y seguimiento" })).toBeVisible();
-  await navigate(page, "El proyecto");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Tecnología formal");
+  await navigate(page, "Inicio");
+  await expect(page.getByRole("heading", { name: "Un recorrido claro" })).toBeVisible();
   await navigate(page, "Mi panel");
-  await expect(page.getByRole("navigation").getByRole("button", { name: "Mi panel" })).toHaveClass(
-    "active",
-  );
+  await expect(
+    page
+      .getByRole("navigation", { name: "Navegación principal" })
+      .getByRole("button", { name: "Mi panel" }),
+  ).toHaveClass("active");
   await expect(page.locator("main")).not.toBeEmpty();
 });
 
@@ -176,4 +172,33 @@ test("AFD: entrada vacía deshabilita acciones y un símbolo extra pierde acepta
   await expect(page.getByTestId("simulation-result")).not.toHaveClass(/accepted/);
   await page.getByRole("button", { name: "Paso", exact: true }).click();
   await expect(page.getByTestId("simulation-result")).toHaveClass(/rejected/);
+});
+
+test("dashboard: registro separado, logo, navegación lateral y sin desbordamiento", async ({
+  page,
+}, testInfo) => {
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("TRANSFORMA.");
+  await expect(page.getByRole("heading", {level:1})).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.getByText("HUB CENTRAL", { exact: true })).toBeVisible();
+  await expect(page.getByText("64 EQUIPOS", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Un evento conectado" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Crecer con cada edición" })).toBeVisible();
+  await expect(page.getByLabel("Nombre del equipo", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "HackaFlow · Inicio" }).locator("svg"),
+  ).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.screenshot({ path: testInfo.outputPath("dashboard.png"), fullPage: true });
+  const toggle = page.getByRole("button", { name: "Abrir menú lateral" });
+  if (await toggle.isVisible()) await toggle.click();
+  const lateral = page.getByRole("navigation", { name: "Navegación lateral" });
+  await expect(lateral).toBeInViewport();
+  await lateral.getByRole("button", { name: /Modelo AFD/ }).click();
+  await expect(page.getByRole("heading", { name: "Simulador de acceso" })).toBeVisible();
+  await navigate(page, "Inicio");
+  await page.getByRole("button", { name: "Registrar mi equipo", exact: false }).click();
+  await expect(page.getByRole("heading", { name: "Registra tu equipo" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /ENTRA/ })).toHaveCount(0);
 });

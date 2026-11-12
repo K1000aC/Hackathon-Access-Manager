@@ -52,9 +52,10 @@ npm run typecheck:e2e
 3. Confirmación de mentoría, entrega de enlace, persistencia intermedia y constancia únicamente después de RMP.
 4. Entrada `R M P`, normalización a RMP, pasos q0 → q1 → q2 → q3, doble estado de aceptación, borde magenta, texto blanco y resplandor. Persistencia del simulador sin certificar equipos.
 5. Entrada `R P`, ejecución automática, rechazo qerr, alerta visual magenta, historial y reinicio a q0.
+7. Portada con visión y proyección, registro separado, navegación lateral y ausencia de desbordamiento horizontal.
 6. Cadena vacía con controles deshabilitados y `RMPX`, que no debe aceptarse aunque transite temporalmente por q3.
 
-Se ejecutan los seis casos en cinco proyectos: Chromium, Firefox, WebKit, Android (Chromium con perfil Pixel 7) e iOS (WebKit con perfil iPhone 13): 30 ejecuciones. Los perfiles móviles simulan pantalla, entrada táctil y agente de usuario; no sustituyen pruebas físicas en teléfonos ni prueban una aplicación nativa.
+Se ejecutan los siete casos en cinco proyectos: Chromium, Firefox, WebKit, Android (Chromium con perfil Pixel 7) e iOS (WebKit con perfil iPhone 13): 35 ejecuciones. Los perfiles móviles simulan pantalla, entrada táctil y agente de usuario; no sustituyen pruebas físicas en teléfonos ni prueban una aplicación nativa.
 
 La suite usa aserciones con espera automática, sin pausas fijas. No compara capturas con una referencia visual: comprueba estilos CSS concretos del diseño neón. Las clases se consultan únicamente para estados/estilos; las interacciones usan roles y etiquetas accesibles.
 
@@ -68,6 +69,6 @@ Si necesitas probar otra instancia, puedes indicar una URL explícita. En ese ca
 E2E_BASE_URL=http://localhost:9000 npm run test:e2e -- --project=chromium
 ```
 
-El estado inicial de Mi panel puede ser el formulario de acceso o el aviso de configuración pendiente. Esta suite no verifica autenticación, correos, aprobación por asesor ni RLS en una instancia real de Supabase. Las pruebas PostgreSQL y del modelo se ejecutan por separado con `npm test`.
+La portada inicial es Inicio: se comprueban el dashboard, el CTA de registro, el logo y la navegación lateral. El contenido de Mi panel puede ser el formulario de acceso o el aviso de configuración pendiente. Esta suite no verifica autenticación, correos, aprobación por asesor ni RLS en una instancia real de Supabase. Las pruebas PostgreSQL y del modelo se ejecutan por separado con `npm test`.
 
 Referencia: [servidor de pruebas](https://playwright.dev/docs/test-webserver), [proyectos y dispositivos](https://playwright.dev/docs/test-projects), [reportes](https://playwright.dev/docs/test-reporters).
