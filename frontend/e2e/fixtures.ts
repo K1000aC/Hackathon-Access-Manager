@@ -87,10 +87,11 @@ export async function navigate(page: Page, name: string) {
     .click();
 }
 export async function registerTeam(page: Page, teamName = "Equipo QA") {
-  await navigate(page, "Registro");
+  await navigate(page, "Mi panel");
   await page.getByLabel("Correo", { exact: true }).fill("qa@example.com");
   await page.getByLabel("Contraseña", { exact: true }).fill("Test-password-123");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await navigate(page, "Registro");
   await expect(page.getByRole("heading", { name: "Registra tu equipo" })).toBeVisible();
   await page.getByLabel("Nombre", { exact: true }).fill(teamName);
   await page.getByLabel("Categoría", { exact: true }).fill("Tecnología educativa");

@@ -144,15 +144,49 @@ function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
     </section>
   );
 }
-function CreateTeam({ action }: { action: Action }) {
+function registrationDraft() {
+  try {
+    const value = JSON.parse(sessionStorage.getItem("hackaflow.registrationDraft") ?? "{}");
+    return {
+      name: typeof value.name === "string" ? value.name : "",
+      category: typeof value.category === "string" ? value.category : "",
+      members:
+        Number(value.members) >= 1 && Number(value.members) <= 10 ? Number(value.members) : 3,
+    };
+  } catch {
+    return { name: "", category: "", members: 3 };
+  }
+}
+function CreateTeam({ action, requestLogin }: { action?: Action; requestLogin?: () => void }) {
+  const [draft] = useState(registrationDraft);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   return (
     <form
       className="portal-form history-card"
+      onChange={(event) => {
+        const form = new FormData(event.currentTarget);
+        try {
+          sessionStorage.setItem(
+            "hackaflow.registrationDraft",
+            JSON.stringify({
+              name: form.get("name"),
+              category: form.get("category"),
+              members: form.get("members"),
+            }),
+          );
+        } catch {
+          /* El formulario sigue disponible. */
+        }
+      }}
       onSubmit={async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
+        if (requestLogin) {
+          requestLogin();
+          return;
+        }
+        if (!action) return;
         setBusy(true);
         try {
           await action("register_event_team", {
@@ -160,6 +194,11 @@ function CreateTeam({ action }: { action: Action }) {
             p_category: String(form.get("category")),
             p_members: Number(form.get("members")),
           });
+          try {
+            sessionStorage.removeItem("hackaflow.registrationDraft");
+          } catch {
+            /* Registro completado. */
+          }
         } catch (error) {
           setError(error instanceof Error ? error.message : "No se pudo registrar.");
         } finally {
@@ -174,18 +213,25 @@ function CreateTeam({ action }: { action: Action }) {
       </p>
       <label>
         Nombre
-        <input name="name" required maxLength={100} />
+        <input name="name" required maxLength={100} defaultValue={draft.name} />
       </label>
       <label>
         Categoría
-        <input name="category" required maxLength={100} />
+        <input name="category" required maxLength={100} defaultValue={draft.category} />
       </label>
       <label>
         Integrantes
-        <input name="members" type="number" min={1} max={10} defaultValue={3} required />
+        <input
+          name="members"
+          type="number"
+          min={1}
+          max={10}
+          defaultValue={draft.members}
+          required
+        />
       </label>
       <button className="button-primary" disabled={busy}>
-        Guardar registro (R)
+        {requestLogin ? "Continuar e iniciar sesión" : "Guardar registro (R)"}
       </button>
       <p role="alert">{error}</p>
     </form>
@@ -513,6 +559,7 @@ export function PlatformPage({
   onNavigate?: (section: "registro" | "equipos" | "plataforma") => void;
 }) {
   const platform = usePlatform();
+  const [registrationAuth, setRegistrationAuth] = useState(false);
   const [selected, setSelected] = useState("");
   const [filter, setFilter] = useState("todos");
   const [notice, setNotice] = useState("");
@@ -536,7 +583,79 @@ export function PlatformPage({
   if (platform.recovery && platform.session)
     return <RecoverPassword done={platform.finishRecovery} />;
   if (platform.loading && !platform.profile) return <p role="status">Cargando tu panel…</p>;
-  if (!platform.session) return <AuthForm initialNotice={platform.authNotice} />;
+  if (!platform.session) {
+    if (mode === "registro")
+      return (
+        <div className="shared-registration">
+          <section className="registration-context">
+            <div className="eyebrow">
+              <span /> REGISTRO DE EQUIPO
+            </div>
+            <h1>Tu equipo empieza aquí.</h1>
+            <p>
+              Prepara los datos del equipo. Para guardarlos en el evento, confirma tu identidad
+              iniciando sesión o creando una cuenta.
+            </p>
+            <div className="registration-requirements">
+              <b>01 · Identifica tu equipo</b>
+              <p>Nombre, categoría e integrantes.</p>
+              <b>02 · Confirma tu cuenta</b>
+              <p>Tu cuenta será la representante del equipo.</p>
+              <b>03 · Continúa el recorrido</b>
+              <p>Envía mentoría y prototipo al asesor.</p>
+            </div>
+          </section>
+          <div>
+            {registrationAuth ? (
+              <>
+                <button className="dashboard-link" onClick={() => setRegistrationAuth(false)}>
+                  ← Volver a los datos del equipo
+                </button>
+                <AuthForm initialNotice={platform.authNotice} />
+              </>
+            ) : (
+              <CreateTeam requestLogin={() => setRegistrationAuth(true)} />
+            )}
+          </div>
+        </div>
+      );
+    if (mode === "seguimiento")
+      return (
+        <section className="portal">
+          <div className="eyebrow">
+            <span /> EQUIPOS / ENTREGAS / REVISIONES
+          </div>
+          <h1>Centro de seguimiento</h1>
+          <div className="tracking-banner">
+            <div className="tracking-symbols">
+              <span>R</span>
+              <i>→</i>
+              <span>M</span>
+              <i>→</i>
+              <span>P</span>
+            </div>
+            <div>
+              <h2>Cada avance, en su lugar</h2>
+              <p>
+                Consulta los equipos asignados, envía entregas y revisa observaciones desde este
+                espacio.
+              </p>
+            </div>
+          </div>
+          <div className="history-card tracking-empty">
+            <h2>Accede al seguimiento de tus equipos</h2>
+            <p>
+              Inicia sesión para consultar tu progreso. Los estudiantes ven su equipo; los asesores,
+              sus asignaciones; la organización, el evento completo.
+            </p>
+            <button className="button-primary" onClick={() => onNavigate?.("plataforma")}>
+              Iniciar sesión para ver mis equipos
+            </button>
+          </div>
+        </section>
+      );
+    return <AuthForm initialNotice={platform.authNotice} />;
+  }
   if (!platform.profile)
     return (
       <section className="history-card">
@@ -598,6 +717,79 @@ export function PlatformPage({
           )}
         </div>
       </div>
+    );
+
+  if (mode === "panel")
+    return (
+      <section className="portal personal-panel">
+        <div className="portal-heading">
+          <div>
+            <p>{roleNames[profile.role]}</p>
+            <h1>Hola, {profile.display_name}</h1>
+            <p>Tu cuenta, tus accesos y el resumen del evento.</p>
+          </div>
+          <button
+            className="button-secondary"
+            onClick={async () => {
+              const result = await cloud!.auth.signOut();
+              if (result.error) setNotice(result.error.message);
+            }}
+          >
+            Cerrar sesión
+          </button>
+        </div>
+        <p role="alert">{platform.error || notice}</p>
+        <div className="account-summary history-card">
+          <span className="registration-seal">
+            {profile.display_name.slice(0, 1).toUpperCase()}
+          </span>
+          <div>
+            <h2>Mi cuenta</h2>
+            <p>{profile.display_name}</p>
+            <p>{profile.email}</p>
+            <p>{roleNames[profile.role]}</p>
+          </div>
+        </div>
+        <div className="portal-stats">
+          <div>
+            <strong>{teams.length}</strong>
+            <span>{profile.role === "advisor" ? "Equipos asignados" : "Equipos"}</span>
+          </div>
+          <div>
+            <strong>{submissions.filter((item) => item.status === "pending").length}</strong>
+            <span>Entregas por revisar</span>
+          </div>
+          <div>
+            <strong>{teams.filter((item) => item.chain === "RMP").length}</strong>
+            <span>Certificados</span>
+          </div>
+        </div>
+        <div className="panel-shortcuts">
+          <article className="history-card">
+            <h2>Registro del equipo</h2>
+            <p>
+              {profile.role === "student"
+                ? teams.length
+                  ? "Consulta el registro de tu equipo y continúa sus etapas."
+                  : "Prepara los datos y registra tu equipo en el evento."
+                : "Cada estudiante registra su equipo desde su cuenta."}
+            </p>
+            <button className="button-primary" onClick={() => onNavigate?.("registro")}>
+              Ir a Registro
+            </button>
+          </article>
+          <article className="history-card">
+            <h2>Entregas y revisiones</h2>
+            <p>Abre Seguimiento para consultar etapas, mentorías, prototipos y observaciones.</p>
+            <button className="button-primary" onClick={() => onNavigate?.("equipos")}>
+              Ir a Seguimiento
+            </button>
+          </article>
+        </div>
+        {profile.role === "organizer" && (
+          <RoleManager people={people} profile={profile} action={action} />
+        )}
+      </section>
     );
 
   const filtered = teams.filter(
@@ -667,9 +859,6 @@ export function PlatformPage({
           <span>Certificados</span>
         </div>
       </div>
-      {profile.role === "organizer" && (
-        <RoleManager people={people} profile={profile} action={action} />
-      )}
       {profile.role === "student" && !teams.length && (
         <section className="history-card tracking-empty">
           <span className="registration-seal">R</span>
