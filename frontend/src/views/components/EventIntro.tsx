@@ -4,11 +4,11 @@ export function EventIntro() {
       <div className="hero-index">
         <span>01</span>
         <i />
-        <small>ACREDITACIÓN</small>
+        <small>INICIO</small>
       </div>
       <div className="registration-copy">
         <div className="eyebrow">
-          <span /> HACKATÓN · CONTROL DE ACCESO 2025
+          <span /> HackaFlow · Controla los accesos de tu hackatón
         </div>
         <h1>
           ENTRA.
