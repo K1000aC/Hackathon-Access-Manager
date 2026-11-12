@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cloud } from "../../infrastructure/cloud/client";
 import type { EventTeam, Profile } from "../../model/platform";
 type Item = {
@@ -19,6 +19,7 @@ const labels = {
   changes_requested: "Requiere correcciones",
 };
 const allowed: Record<string, string> = {
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   pdf: "application/pdf",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -32,10 +33,12 @@ export function WorkBoard({
   kind,
   profile,
   teams,
+  readOnly = false,
 }: {
-  kind: "backlog" | "sprint";
+  kind: "backlog" | "sprint" | "task";
   profile: Profile;
   teams: EventTeam[];
+  readOnly?: boolean;
 }) {
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState("");
@@ -44,6 +47,10 @@ export function WorkBoard({
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
   const [teamId, setTeamId] = useState(teams[0]?.id ?? "");
+  const statusRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (notice) statusRef.current?.scrollIntoView({ block: "nearest" });
+  }, [notice]);
   const student = profile.role === "student";
   const load = useCallback(async () => {
     if (!cloud) return;
@@ -56,7 +63,7 @@ export function WorkBoard({
       setReady(false);
       setError(
         ["42P01", "PGRST205"].includes(error.code)
-          ? "Falta activar Backlog y Sprints en Supabase con la migración 002_work_items.sql. Tus equipos y accesos siguen disponibles."
+          ? "Falta actualizar las entregas en Supabase. Revisa las migraciones 002 y 005."
           : "No se pudo cargar el trabajo. Intenta actualizar.",
       );
       return;
@@ -124,7 +131,13 @@ export function WorkBoard({
       <div className="panel-section-title">
         <div>
           <span>ORGANIZA / ENTREGA / MEJORA</span>
-          <h2>{kind === "backlog" ? "Backlog del proyecto" : "Sprints del equipo"}</h2>
+          <h2>
+            {kind === "task"
+              ? "Entregas y tareas del proyecto"
+              : kind === "backlog"
+                ? "Backlog del proyecto"
+                : "Sprints del equipo"}
+          </h2>
           <p>
             {student
               ? "Prepara actividades, adjunta evidencias y envía el trabajo a tu asesor."
@@ -140,7 +153,9 @@ export function WorkBoard({
         entregas o Por revisar.
       </p>
       <p role="alert">{error}</p>
-      <p role="status">{notice}</p>
+      <p ref={statusRef} role="status" className={notice ? "member-confirmation" : undefined}>
+        {notice}
+      </p>
       {!teams.length ? (
         <div className="history-card">
           <p>
@@ -168,91 +183,101 @@ export function WorkBoard({
               ))}
             </select>
           </label>
-          {student && teams.find((t) => t.id === teamId)?.owner_id === profile.id && ready && (
-            <details className="history-card work-compose" open={editing ? true : undefined}>
-              <summary>
-                {editing
-                  ? "Corregir trabajo"
-                  : `Añadir ${kind === "backlog" ? "actividad al backlog" : "sprint"}`}
-              </summary>
-              <form
-                key={editing?.id ?? "new"}
-                className="portal-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void save(
-                    e.currentTarget,
-                    (e.nativeEvent as SubmitEvent).submitter?.getAttribute("value") === "submit",
-                  );
-                }}
-              >
-                <label>
-                  Título
-                  <input
-                    name="title"
-                    required
-                    maxLength={120}
-                    defaultValue={editing?.title}
-                    placeholder={
-                      kind === "backlog"
-                        ? "Ej. Definir historias de usuario"
-                        : "Ej. Sprint 1 · Prototipo inicial"
-                    }
-                  />
-                </label>
-                <label>
-                  Descripción y objetivos
-                  <textarea
-                    name="detail"
-                    required
-                    maxLength={4000}
-                    defaultValue={editing?.detail}
-                  />
-                </label>
-                <label>
-                  Enlace de evidencia (opcional)
-                  <input
-                    name="url"
-                    type="url"
-                    pattern="https?://.*"
-                    maxLength={2000}
-                    defaultValue={editing?.evidence_url}
-                    placeholder="https://…"
-                  />
-                </label>
-                <label>
-                  Adjuntar archivo (opcional)
-                  <input
-                    name="attachment"
-                    type="file"
-                    accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg,.zip"
-                  />
-                </label>
-                <small>
-                  PDF, Word, Excel, texto, imagen o ZIP · máximo 10 MB.{" "}
-                  {editing?.attachment_path &&
-                    "El archivo anterior se conserva si no adjuntas otro."}
-                </small>
-                <div className="portal-actions">
-                  <button className="button-secondary" value="draft" disabled={busy}>
-                    Guardar en preparación
-                  </button>
-                  <button className="button-primary" value="submit" disabled={busy}>
-                    Enviar trabajo a revisión
-                  </button>
-                  {editing && (
-                    <button type="button" disabled={busy} onClick={() => setEditing(null)}>
-                      Cancelar edición
+          {!readOnly &&
+            student &&
+            teams.find((t) => t.id === teamId)?.owner_id === profile.id &&
+            ready && (
+              <details className="history-card work-compose" open={editing ? true : undefined}>
+                <summary>
+                  {editing
+                    ? "Corregir trabajo"
+                    : `Añadir ${kind === "task" ? "nueva entrega / tarea" : kind === "backlog" ? "actividad al backlog" : "sprint"}`}
+                </summary>
+                <form
+                  key={editing?.id ?? "new"}
+                  className="portal-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void save(
+                      e.currentTarget,
+                      (e.nativeEvent as SubmitEvent).submitter?.getAttribute("value") === "submit",
+                    );
+                  }}
+                >
+                  <label>
+                    Título
+                    <input
+                      name="title"
+                      required
+                      maxLength={120}
+                      defaultValue={editing?.title}
+                      placeholder={
+                        kind === "task"
+                          ? "Ej. Propuesta inicial del proyecto"
+                          : kind === "backlog"
+                            ? "Ej. Definir historias de usuario"
+                            : "Ej. Sprint 1 · Prototipo inicial"
+                      }
+                    />
+                  </label>
+                  <label>
+                    Descripción y objetivos
+                    <textarea
+                      name="detail"
+                      required
+                      maxLength={4000}
+                      defaultValue={editing?.detail}
+                    />
+                  </label>
+                  <label>
+                    Enlace de evidencia (opcional)
+                    <input
+                      name="url"
+                      type="url"
+                      pattern="https?://.*"
+                      maxLength={2000}
+                      defaultValue={editing?.evidence_url}
+                      placeholder="https://…"
+                    />
+                  </label>
+                  <label>
+                    Adjuntar archivo (opcional)
+                    <input
+                      name="attachment"
+                      type="file"
+                      accept=".pdf,.docx,.pptx,.xlsx,.txt,.png,.jpg,.jpeg,.zip"
+                    />
+                  </label>
+                  <small>
+                    PDF, Word, PowerPoint, Excel, texto, imagen o ZIP · máximo 10 MB.{" "}
+                    {editing?.attachment_path &&
+                      "El archivo anterior se conserva si no adjuntas otro."}
+                  </small>
+                  <div className="portal-actions">
+                    <button className="button-secondary" value="draft" disabled={busy}>
+                      Guardar en preparación
                     </button>
-                  )}
-                </div>
-              </form>
-            </details>
-          )}
+                    <button className="button-primary" value="submit" disabled={busy}>
+                      Enviar trabajo a revisión
+                    </button>
+                    {editing && (
+                      <button type="button" disabled={busy} onClick={() => setEditing(null)}>
+                        Cancelar edición
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </details>
+            )}
           {ready && !visible.length && (
             <p className="history-card">
-              Aún no hay {kind === "backlog" ? "actividades de backlog" : "sprints"} en este
-              apartado.
+              Aún no hay{" "}
+              {kind === "task"
+                ? "entregas o tareas"
+                : kind === "backlog"
+                  ? "actividades de backlog"
+                  : "sprints"}{" "}
+              en este apartado.
             </p>
           )}
           <div className="work-cards">
@@ -288,7 +313,8 @@ export function WorkBoard({
                     <b>Observaciones:</b> {item.feedback}
                   </p>
                 )}
-                {student &&
+                {!readOnly &&
+                  student &&
                   teams.find((t) => t.id === item.team_id)?.owner_id === profile.id &&
                   ["draft", "changes_requested"].includes(item.status) && (
                     <button
@@ -303,7 +329,7 @@ export function WorkBoard({
                       Editar / corregir
                     </button>
                   )}
-                {!student && item.status === "pending" && (
+                {!readOnly && !student && item.status === "pending" && (
                   <form
                     className="portal-form"
                     onSubmit={async (e) => {
