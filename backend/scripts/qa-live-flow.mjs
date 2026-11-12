@@ -8,12 +8,8 @@ import { fileURLToPath } from "node:url";
 const batch = JSON.parse(
   await readFile(new URL("../.local/qa-users.json", import.meta.url), "utf8"),
 );
-const student = batch.accounts.find(
-  (account) => account.email === "hackaflow.qa.student01@example.com",
-);
-const advisor = batch.accounts.find(
-  (account) => account.email === "hackaflow.qa.advisor01@example.com",
-);
+const student = batch.accounts.find((account) => account.role === "student");
+const advisor = batch.accounts.find((account) => account.role === "advisor");
 const target = "https://hackathon-access-manager.vercel.app";
 const key = process.env.SUPABASE_ADMIN_KEY;
 assert(
@@ -154,7 +150,7 @@ try {
   assert.equal(
     visibleAssigned.length,
     1,
-    "La cuenta QA advisor01 tiene asignaciones adicionales; no se modifica ninguna.",
+    "La cuenta asesora QA tiene asignaciones adicionales; no se modifica ninguna.",
   );
   await a
     .getByLabel("Observaciones", { exact: true })
@@ -167,7 +163,7 @@ try {
   await refresh(s);
   await s
     .getByLabel("Describe la sesión y el mentor con quien asististe")
-    .fill("QA: sesión realizada con Asesor QA 01 sobre arquitectura MVC y el AFD RMP.");
+    .fill("QA: sesión realizada con el asesor asignado sobre arquitectura MVC y el AFD RMP.");
   await s.getByRole("button", { name: "Enviar para aprobación", exact: true }).click();
   await s.getByText("Tu envío está pendiente de revisión.", { exact: false }).waitFor();
   await refresh(a);
