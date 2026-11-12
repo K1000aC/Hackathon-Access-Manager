@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { SimulatorPage } from "../views/pages/SimulatorPage";
 import { DashboardPage } from "../views/pages/DashboardPage";
 import { MotionBackground } from "../views/components/MotionBackground";
+import { IdleSessionGuard } from "../views/components/IdleSessionGuard";
 import { subscribeAuth, getAuthSnapshot } from "../infrastructure/cloud/client";
 type Section = "plataforma" | "registro" | "automata" | "inicio" | "equipos";
 
@@ -201,6 +202,8 @@ export default function App() {
         )}
         {section === "automata" && <SimulatorPage />}
       </main>
+
+      <IdleSessionGuard />
 
       <footer>
         <div>

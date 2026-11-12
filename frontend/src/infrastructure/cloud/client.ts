@@ -63,7 +63,32 @@ export function finishRecovery() {
   };
   listeners.forEach((listener) => listener());
 }
-export const cloud = cloudConfigured ? createClient(url, key) : null;
+export const cloud = cloudConfigured
+  ? createClient(url, key, {
+      auth: {
+        storage: window.sessionStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
+  : null;
+
+export async function signOutForInactivity() {
+  if (!cloud) throw new Error("La plataforma no está configurada.");
+  const { error } = await cloud.auth.signOut({ scope: "local" });
+  if (error) throw new Error(error.message);
+  rememberRecovery(false);
+  snapshot = {
+    ...snapshot,
+    session: null,
+    recovery: false,
+    ready: true,
+    notice: "La sesión se cerró por inactividad. Inicia sesión para continuar.",
+  };
+  listeners.forEach((listener) => listener());
+}
+
 // Suscribirse inmediatamente: los enlaces pueden procesarse antes de montar cualquier pantalla.
 cloud?.auth.onAuthStateChange((event, session) => {
   const recovery = event === "PASSWORD_RECOVERY" || (snapshot.recovery && Boolean(session));
