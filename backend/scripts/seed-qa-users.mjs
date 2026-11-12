@@ -3,14 +3,15 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { readFile, writeFile, mkdir, rename, chmod } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { planIdentities } from "./qa-identities.mjs";
+
 const credentialsURL = new URL("../.local/qa-users.json", import.meta.url);
 export function planAccounts() {
+  const identities = planIdentities();
   return Array.from({ length: 15 }, (_, i) => {
     const role = i < 10 ? "student" : "advisor";
-    const number = String(i < 10 ? i + 1 : i - 9).padStart(2, "0");
     return {
-      email: `hackaflow.qa.${role}${number}@example.com`,
-      display_name: `${role === "student" ? "Estudiante" : "Asesor"} QA ${number}`,
+      ...identities[i],
       role,
       password: `Hf!${randomBytes(18).toString("base64url")}9aA`,
       id: null,
@@ -73,7 +74,7 @@ export async function seedAccounts(client, batch, save) {
     await save(batch);
   }
 }
-async function saveBatch(batch) {
+export async function saveBatch(batch) {
   await mkdir(new URL("../.local/", import.meta.url), { recursive: true, mode: 0o700 });
   const temporary = new URL("../.local/qa-users.json.tmp", import.meta.url);
   await writeFile(temporary, JSON.stringify(batch, null, 2) + "\n", { mode: 0o600 });

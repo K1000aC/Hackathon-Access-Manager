@@ -16,7 +16,7 @@ npm run seed:qa
 5. Refresca Authentication → Users en Supabase. Entra en HackaFlow con una cuenta de estudiante y otra de asesor desde navegadores o dispositivos diferentes. Los correos de ejemplo no tienen buzón: no necesitan recibir mensajes para iniciar sesión porque ya se crean confirmados.
 6. Con tu cuenta organizadora asigna los asesores a los equipos que registren los estudiantes.
 
-Se usan `hackaflow.qa.student01@example.com` hasta `student10` y `hackaflow.qa.advisor01@example.com` hasta `advisor05`. El rol Supabase Auth continúa siendo `authenticated`; el rol de HackaFlow está en `public.profiles.role`.
+Se generan nombres ficticios al azar con «QA» al final y correos como `nombre.apellido@example.com`, sin acentos. Las identidades se conservan en el archivo privado entre ejecuciones. El rol Supabase Auth continúa siendo `authenticated`; el rol de HackaFlow está en `public.profiles.role`.
 
 El archivo de accesos se guarda antes de crear usuarios y después de cada avance. Si se interrumpe la ejecución, conserva ese archivo y vuelve a ejecutar el comando. El script reconoce su propio lote y no duplica cuentas ni restablece contraseñas. Si encuentra una cuenta del mismo correo ajena al lote, se detiene sin modificarla. No se elimina ninguna cuenta existente.
 
@@ -26,7 +26,7 @@ Referencia: [API administrativa createUser](https://supabase.com/docs/reference/
 
 ## QA autenticado en producción
 
-El script `backend/scripts/qa-live-flow.mjs` ejecuta el recorrido real con student01 y advisor01. Es opt-in: no forma parte de `npm test` ni de `npm run test:e2e` porque crea entregas y aprobaciones en el proyecto compartido.
+El script `backend/scripts/qa-live-flow.mjs` ejecuta el recorrido real con la primera cuenta estudiante y la primera cuenta asesora del lote. Es opt-in: no forma parte de `npm test` ni de `npm run test:e2e` porque crea entregas y aprobaciones en el proyecto compartido.
 
 ```sh
 node --env-file=backend/.env.qa.local backend/scripts/qa-live-flow.mjs
@@ -37,3 +37,11 @@ Usa la cuenta administrativa solo para preparar la asignación del equipo QA; el
 La ejecución del 12 de noviembre de 2026 completó registro → mentoría pendiente → correcciones → reenvío → aprobación → prototipo pendiente → aprobación → certificación q3. Conservó el historial y verificó la constancia después de recargar. Usa una URL ficticia de example.com para la entrega de QA.
 
 Resultados privados: `backend/.local/qa-live-report.json` y `backend/.local/qa-live-certified.png`. No se guardan trazas ni vídeos de inicio de sesión. El script conserva datos existentes: si el equipo ya avanzó, se detiene y no lo reinicia. Por tanto, una vez completado el recorrido, no se debe esperar que repetir el comando vuelva a realizar las etapas desde cero.
+
+## Cambiar la presentación de las cuentas existentes
+
+```sh
+node --env-file=backend/.env.qa.local backend/scripts/rename-qa-users.mjs
+```
+
+Este comando verifica los UUID y la marca administrativa `qa_seed` de las 15 cuentas antes de cambiar nombres y correos en Auth y profiles. Conserva contraseñas, roles, equipos y entregas. Guarda el plan y los accesos actualizados en `backend/.local/qa-users.json`; una interrupción se puede retomar sin sortear nombres de nuevo. Los correos anteriores dejan de servir para iniciar sesión. No se modifica la cuenta organizadora real.
