@@ -1,13 +1,18 @@
 import { PlatformPage } from "../views/pages/PlatformPage";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { RegistrationPage } from "../views/pages/RegistrationPage";
 import { SimulatorPage } from "../views/pages/SimulatorPage";
 import { DashboardPage } from "../views/pages/DashboardPage";
 import { MotionBackground } from "../views/components/MotionBackground";
 import { TeamsPage } from "../views/pages/TeamsPage";
+import { subscribeAuth, getAuthSnapshot } from "../infrastructure/cloud/client";
 type Section = "plataforma" | "registro" | "automata" | "inicio" | "equipos";
 
 export default function App() {
+  const auth = useSyncExternalStore(subscribeAuth, getAuthSnapshot);
+  useEffect(() => {
+    if (auth.redirected || auth.recovery) setSection("plataforma");
+  }, [auth.redirected, auth.recovery]);
   const [section, setSection] = useState<Section>("inicio");
 
   const [sidebarOpen, setSidebarOpen] = useState(false);

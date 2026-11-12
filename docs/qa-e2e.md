@@ -72,3 +72,9 @@ E2E_BASE_URL=http://localhost:9000 npm run test:e2e -- --project=chromium
 La portada inicial es Inicio: se comprueban el dashboard, el CTA de registro, el logo y la navegación lateral. El contenido de Mi panel puede ser el formulario de acceso o el aviso de configuración pendiente. Esta suite no verifica autenticación, correos, aprobación por asesor ni RLS en una instancia real de Supabase. Las pruebas PostgreSQL y del modelo se ejecutan por separado con `npm test`.
 
 Referencia: [servidor de pruebas](https://playwright.dev/docs/test-webserver), [proyectos y dispositivos](https://playwright.dev/docs/test-projects), [reportes](https://playwright.dev/docs/test-reporters).
+
+## Regresión de acceso y recuperación
+
+`npm run test:auth` inicia una instancia aislada en el puerto 8444 con un proyecto Supabase ficticio. Intercepta las respuestas de Auth y de perfiles sin enviar correos ni alterar cuentas reales. Prueba en Chromium y WebKit/iPhone la recepción del enlace antes de montar Mi panel, la conservación del modo recuperación al recargar, el guardado de contraseña, la salida, el rechazo de la contraseña anterior, el acceso repetido con la nueva y el manejo de enlaces expirados. No guarda trazas ni vídeos de estos formularios.
+
+La suscripción de autenticación ahora se crea al inicializar el cliente, no al entrar al panel. El enlace de recuperación abre el formulario de cambio; después de guardar se cierra la sesión temporal y se solicita entrar con la contraseña nueva. La validación real de correo y contraseña en Supabase sigue siendo necesaria después del despliegue.

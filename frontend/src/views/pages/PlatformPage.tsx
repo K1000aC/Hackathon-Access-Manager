@@ -14,7 +14,7 @@ import {
 import { AutomatonDiagram } from "../components/AutomatonDiagram";
 
 type Action = (name: string, args: Record<string, unknown>) => Promise<void>;
-function AuthForm() {
+function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
   const [signup, setSignup] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -42,7 +42,12 @@ function AuthForm() {
       if (signup && !result.data.session)
         setNotice("Revisa tu correo para confirmar la cuenta. Después inicia sesión.");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "No se pudo iniciar sesión.");
+      const message = error instanceof Error ? error.message : "No se pudo iniciar sesión.";
+      setNotice(
+        message === "Invalid login credentials"
+          ? "Correo o contraseña incorrectos. Abrir un enlace del correo no cambia tu contraseña: usa Olvidé mi contraseña y guarda una nueva."
+          : message,
+      );
     } finally {
       setBusy(false);
     }
@@ -79,7 +84,7 @@ function AuthForm() {
           <input
             name="password"
             type="password"
-            minLength={8}
+            minLength={signup ? 8 : undefined}
             required
             autoComplete={signup ? "new-password" : "current-password"}
           />
@@ -115,7 +120,7 @@ function AuthForm() {
               setBusy(true);
               try {
                 const result = await cloud!.auth.resetPasswordForEmail(email, {
-                  redirectTo: window.location.origin,
+                  redirectTo: `${window.location.origin}/?flow=recovery`,
                 });
                 if (result.error) throw result.error;
                 setNotice("Si la cuenta existe, recibirás un enlace para cambiar la contraseña.");
@@ -129,7 +134,7 @@ function AuthForm() {
             Olvidé mi contraseña
           </button>
         )}
-        <p role="status">{notice}</p>
+        <p role="status">{notice || initialNotice}</p>
       </form>
     </section>
   );
@@ -469,6 +474,11 @@ function RecoverPassword({ done }: { done: () => void }) {
         try {
           const result = await cloud!.auth.updateUser({ password });
           if (result.error) throw result.error;
+          const logout = await cloud!.auth.signOut({ scope: "local" });
+          if (logout.error)
+            throw new Error(
+              "La contraseña se guardó. Cierra sesión y vuelve a entrar con la nueva contraseña.",
+            );
           done();
         } catch (error) {
           setNotice(error instanceof Error ? error.message : "No se pudo cambiar la contraseña.");
@@ -510,9 +520,12 @@ export function PlatformPage() {
         </p>
       </section>
     );
-  if (platform.recovery) return <RecoverPassword done={platform.finishRecovery} />;
+  if (platform.recovery && !platform.session && platform.loading)
+    return <p role="status">Validando enlace de recuperación…</p>;
+  if (platform.recovery && platform.session)
+    return <RecoverPassword done={platform.finishRecovery} />;
   if (platform.loading && !platform.profile) return <p role="status">Cargando tu panel…</p>;
-  if (!platform.session) return <AuthForm />;
+  if (!platform.session) return <AuthForm initialNotice={platform.authNotice} />;
   if (!platform.profile)
     return (
       <section className="history-card">

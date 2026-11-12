@@ -1,12 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
-import { cloud } from "../infrastructure/cloud/client";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  cloud,
+  getAuthSnapshot,
+  subscribeAuth,
+  finishRecovery,
+} from "../infrastructure/cloud/client";
 import type { Profile, EventTeam, Submission } from "../model/platform";
 
 export function usePlatform() {
   const generation = useRef(0);
-  const [recovery, setRecovery] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
+  const auth = useSyncExternalStore(subscribeAuth, getAuthSnapshot);
+  const { session, recovery } = auth;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [teams, setTeams] = useState<EventTeam[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -14,23 +18,16 @@ export function usePlatform() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(Boolean(cloud));
   useEffect(() => {
-    if (!cloud) return;
-    const { data } = cloud.auth.onAuthStateChange((event, value) => {
-      if (event === "PASSWORD_RECOVERY") setRecovery(true);
-      if (!value) setRecovery(false);
-      generation.current++;
-      setSession(value);
-      setProfile(null);
-      setTeams([]);
-      setSubmissions([]);
-      setPeople([]);
-      setLoading(Boolean(value));
-    });
+    generation.current++;
+    setProfile(null);
+    setTeams([]);
+    setSubmissions([]);
+    setPeople([]);
+    setLoading(Boolean(session));
     return () => {
       generation.current++;
-      data.subscription.unsubscribe();
     };
-  }, []);
+  }, [session]);
   const refresh = useCallback(async () => {
     if (!cloud || !session) return;
     const currentGeneration = generation.current;
@@ -90,11 +87,12 @@ export function usePlatform() {
     teams,
     submissions,
     people,
-    loading,
+    loading: loading || !auth.ready,
+    authNotice: auth.notice,
     error,
     refresh,
     action,
     recovery,
-    finishRecovery: () => setRecovery(false),
+    finishRecovery,
   };
 }
