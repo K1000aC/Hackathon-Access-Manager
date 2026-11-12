@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "typecheck:e2e": "tsc --noEmit -p frontend/e2e/tsconfig.json"
+    "typecheck:e2e": "tsc --noEmit -p frontend/e2e/tsconfig.json",
+    "seed:qa": "node --env-file=backend/.env.qa.local backend/scripts/seed-qa-users.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",

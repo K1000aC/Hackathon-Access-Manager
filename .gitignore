@@ -25,3 +25,6 @@ logs/
 /playwright-report/
 /test-results/
 /blob-report/
+
+# Accesos privados generados para QA
+/backend/.local/
