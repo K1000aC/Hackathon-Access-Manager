@@ -12,10 +12,18 @@ test("navegación compartida y sidebar desplegable en todas las pantallas", asyn
     "aria-expanded",
     "false",
   );
-  for (const name of ["Mi panel", "Registro", "Seguimiento"]) {
-    await navigate(page, name);
-    await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toBeVisible();
-  }
+  await navigate(page, "Mi panel");
+  await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toBeVisible();
+  await navigate(page, "Registro");
+  await expect(
+    page.getByRole("heading", { name: "Registra tu equipo", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toHaveCount(0);
+  await navigate(page, "Seguimiento");
+  await expect(
+    page.getByRole("heading", { name: "Centro de seguimiento", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toHaveCount(0);
   await navigate(page, "Modelo AFD");
   await expect(page.getByRole("heading", { name: "Simulador de acceso" })).toBeVisible();
   await expect(page.getByRole("table").getByRole("row")).toHaveCount(6);
@@ -58,7 +66,9 @@ test("AFD válido: R M P paso a paso, estilos neón y sesión persistente", asyn
   await expect(page.getByTestId("simulation-result")).toHaveClass(/accepted/);
   await expect(page.getByRole("button", { name: "Paso", exact: true })).toBeDisabled();
   await navigate(page, "Seguimiento");
-  await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Centro de seguimiento", exact: true }),
+  ).toBeVisible();
   await navigate(page, "Modelo AFD");
   await expect(page.getByTestId("state-q3")).toHaveClass(/active/);
   await page.reload();
@@ -130,6 +140,35 @@ test("dashboard: registro separado, logo, navegación lateral y sin desbordamien
   await expect(page.getByRole("heading", { name: "Simulador de acceso" })).toBeVisible();
   await navigate(page, "Inicio");
   await page.getByRole("button", { name: "Registrar mi equipo", exact: false }).click();
-  await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Registra tu equipo", exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: /ENTRA/ })).toHaveCount(0);
+});
+
+test("las tres vistas son diferentes antes y después de iniciar sesión y conservan el formulario", async ({
+  page,
+}) => {
+  await navigate(page, "Registro");
+  await page.getByLabel("Nombre", { exact: true }).fill("Equipo QA");
+  await page.getByLabel("Categoría", { exact: true }).fill("Educación");
+  await page.getByRole("button", { name: "Continuar e iniciar sesión" }).click();
+  await page.getByLabel("Correo", { exact: true }).fill("qa@example.com");
+  await page.getByLabel("Contraseña", { exact: true }).fill("Test-password-123");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await expect(page.getByLabel("Nombre", { exact: true })).toHaveValue("Equipo QA");
+  await page.getByRole("button", { name: "Guardar registro (R)" }).click();
+  await expect(page.getByRole("heading", { name: "Tu equipo ya está registrado" })).toBeVisible();
+  await navigate(page, "Mi panel");
+  await expect(page.getByRole("heading", { name: "Mi cuenta", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Centro de seguimiento", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByLabel("Filtrar equipos")).toHaveCount(0);
+  await page.getByRole("button", { name: "Ir a Seguimiento", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Centro de seguimiento", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Filtrar equipos")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mi cuenta", exact: true })).toHaveCount(0);
 });

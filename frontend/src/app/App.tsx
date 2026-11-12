@@ -45,6 +45,23 @@ export default function App() {
       <MotionBackground />
       <header>
         <button
+          ref={toggleRef}
+          className="sidebar-toggle"
+          aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
+          aria-expanded={sidebarOpen}
+          aria-controls="sidebar"
+          onClick={() => (sidebarOpen ? closeSidebar() : setSidebarOpen(true))}
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path
+              d="M4 6h16M4 12h16M4 18h16"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+        <button
           className="brand"
           aria-label="HackaFlow · Inicio"
           onClick={() => go("inicio")}
@@ -70,23 +87,6 @@ export default function App() {
             <strong>HackaFlow</strong>
             <small>CONTROL DE ACCESOS</small>
           </span>
-        </button>
-        <button
-          ref={toggleRef}
-          className="sidebar-toggle"
-          aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
-          aria-expanded={sidebarOpen}
-          aria-controls="sidebar"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-            <path
-              d="M4 6h16M4 12h16M4 18h16"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
         </button>
         <nav aria-label="Navegación principal">
           {items.map(({ id, label }) => (
@@ -141,7 +141,15 @@ export default function App() {
       >
         {compact && (
           <button className="sidebar-close" onClick={closeSidebar}>
-            Cerrar menú ×
+            <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+              <path
+                d="M6 6l12 12M18 6 6 18"
+                stroke="currentColor"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span>Cerrar menú</span>
           </button>
         )}
         <div className="sidebar-intro">

@@ -3350,3 +3350,70 @@ footer small {
   border-radius: 8px;
   min-height: 50px;
 }
+
+.collapsible-shell .sidebar-toggle {
+  margin: 0 16px 0 0;
+  flex: 0 0 44px;
+}
+.app-sidebar .sidebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  align-self: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.sidebar-close svg {
+  flex: 0 0 26px;
+  color: #ffffff;
+  filter: drop-shadow(0 0 6px rgb(194 24 91 / 0.5));
+}
+.personal-panel .account-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  border: 1px solid #7b1fa2;
+  border-radius: 18px;
+  background: linear-gradient(120deg, rgb(123 31 162 / 0.3), transparent), #1a0033;
+}
+.account-summary p {
+  overflow-wrap: anywhere;
+}
+.account-summary h2 {
+  font-size: 26px;
+  margin-bottom: 14px;
+}
+.panel-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.panel-shortcuts article {
+  display: grid;
+  align-content: start;
+  gap: 24px;
+  border: 1px solid #7b1fa2;
+  border-radius: 16px;
+  background: #1a0033;
+}
+.panel-shortcuts h2 {
+  font-size: 24px;
+}
+.shared-registration .portal-auth {
+  display: block;
+}
+.shared-registration .portal-auth > div {
+  display: none;
+}
+.shared-registration > div {
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .panel-shortcuts {
+    grid-template-columns: 1fr;
+  }
+}
