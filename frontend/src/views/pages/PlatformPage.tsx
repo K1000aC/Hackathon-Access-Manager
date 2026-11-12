@@ -1,3 +1,4 @@
+import { authErrorMessage } from "../../model/authErrors";
 import { useState, type FormEvent } from "react";
 import { cloud, cloudConfigured } from "../../infrastructure/cloud/client";
 import { usePlatform } from "../../controller/usePlatform";
@@ -15,6 +16,7 @@ import { AutomatonDiagram } from "../components/AutomatonDiagram";
 
 type Action = (name: string, args: Record<string, unknown>) => Promise<void>;
 function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
+  const [showPassword, setShowPassword] = useState(false);
   const [signup, setSignup] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -42,12 +44,7 @@ function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
       if (signup && !result.data.session)
         setNotice("Revisa tu correo para confirmar la cuenta. Después inicia sesión.");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo iniciar sesión.";
-      setNotice(
-        message === "Invalid login credentials"
-          ? "Correo o contraseña incorrectos. Abrir un enlace del correo no cambia tu contraseña: usa Olvidé mi contraseña y guarda una nueva."
-          : message,
-      );
+      setNotice(authErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -83,12 +80,20 @@ function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
           Contraseña
           <input
             name="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             minLength={signup ? 8 : undefined}
             required
             autoComplete={signup ? "new-password" : "current-password"}
           />
         </label>
+        <button
+          type="button"
+          className="password-toggle"
+          aria-pressed={showPassword}
+          onClick={() => setShowPassword(!showPassword)}
+        >
+          {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+        </button>
         <button className="button-primary" disabled={busy}>
           {busy ? "Conectando…" : signup ? "Crear cuenta de estudiante" : "Entrar"}
         </button>
@@ -124,8 +129,8 @@ function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
                 });
                 if (result.error) throw result.error;
                 setNotice("Si la cuenta existe, recibirás un enlace para cambiar la contraseña.");
-              } catch {
-                setNotice("No se pudo solicitar el correo. Intenta nuevamente.");
+              } catch (error) {
+                setNotice(authErrorMessage(error, true));
               } finally {
                 setBusy(false);
               }
@@ -500,7 +505,13 @@ function RecoverPassword({ done }: { done: () => void }) {
   );
 }
 
-export function PlatformPage() {
+export function PlatformPage({
+  mode = "panel",
+  onNavigate,
+}: {
+  mode?: "panel" | "registro" | "seguimiento";
+  onNavigate?: (section: "registro" | "equipos" | "plataforma") => void;
+}) {
   const platform = usePlatform();
   const [selected, setSelected] = useState("");
   const [filter, setFilter] = useState("todos");
@@ -515,8 +526,8 @@ export function PlatformPage() {
           conexión de Supabase.
         </p>
         <p>
-          Mientras tanto, Registro local y Seguimiento local permiten probar la demostración en este
-          navegador. Modelo AFD conserva el simulador educativo independiente.
+          Registro y Seguimiento requieren una conexión activa con la plataforma. El simulador
+          educativo permanece disponible desde Modelo AFD.
         </p>
       </section>
     );
@@ -539,6 +550,56 @@ export function PlatformPage() {
       </section>
     );
   const { profile, teams, submissions, people, action } = platform;
+  if (mode === "registro")
+    return (
+      <div className="shared-registration">
+        <section className="registration-context">
+          <div className="eyebrow">
+            <span /> REGISTRO DE EQUIPO
+          </div>
+          <h1>Tu equipo empieza aquí.</h1>
+          <p>
+            Tu identidad ya está confirmada como {profile.display_name}. Guarda el equipo en la
+            plataforma para recibir seguimiento de tu asesor.
+          </p>
+          <div className="registration-requirements">
+            <b>01 · Registro</b>
+            <p>Una cuenta representante y un equipo.</p>
+            <b>02 · Mentoría</b>
+            <p>Envía tu actividad para que el asesor la revise.</p>
+            <b>03 · Prototipo</b>
+            <p>Entrega tu enlace y completa la certificación.</p>
+          </div>
+        </section>
+        <div>
+          {profile.role !== "student" ? (
+            <section className="history-card">
+              <h2>Registro para estudiantes</h2>
+              <p>
+                Tu cuenta de {roleNames[profile.role].toLowerCase()} administra el seguimiento. Cada
+                estudiante representante registra su equipo con su propia cuenta.
+              </p>
+              <button className="button-primary" onClick={() => onNavigate?.("equipos")}>
+                Ir al seguimiento
+              </button>
+            </section>
+          ) : teams.length ? (
+            <section className="history-card registration-confirmed">
+              <span className="registration-seal">R</span>
+              <h2>Tu equipo ya está registrado</h2>
+              <h3>{teams[0].name}</h3>
+              <p>El registro y su progreso están guardados en la plataforma.</p>
+              <button className="button-primary" onClick={() => onNavigate?.("equipos")}>
+                Continuar al seguimiento
+              </button>
+            </section>
+          ) : (
+            <CreateTeam action={action} />
+          )}
+        </div>
+      </div>
+    );
+
   const filtered = teams.filter(
     (team) =>
       filter === "todos" ||
@@ -554,7 +615,9 @@ export function PlatformPage() {
       <div className="portal-heading">
         <div>
           <p>{roleNames[profile.role]}</p>
-          <h1>Hola, {profile.display_name}</h1>
+          <h1>
+            {mode === "seguimiento" ? "Centro de seguimiento" : `Hola, ${profile.display_name}`}
+          </h1>
           <p>
             {profile.role === "student"
               ? "Tus entregas, observaciones y progreso."
@@ -577,7 +640,19 @@ export function PlatformPage() {
         </div>
       </div>
       <p role="alert">{platform.error || notice}</p>
-      <p>Datos compartidos · actualización cada 15 segundos y al volver a esta ventana.</p>
+      <div className="tracking-banner">
+        <div className="tracking-symbols">
+          <span>R</span>
+          <i>→</i>
+          <span>M</span>
+          <i>→</i>
+          <span>P</span>
+        </div>
+        <div>
+          <h2>Del primer paso al proyecto certificado</h2>
+          <p>Consulta entregas, revisiones y el avance de cada equipo en un mismo lugar.</p>
+        </div>
+      </div>
       <div className="portal-stats">
         <div>
           <strong>{teams.length}</strong>
@@ -595,7 +670,16 @@ export function PlatformPage() {
       {profile.role === "organizer" && (
         <RoleManager people={people} profile={profile} action={action} />
       )}
-      {profile.role === "student" && !teams.length && <CreateTeam action={action} />}
+      {profile.role === "student" && !teams.length && (
+        <section className="history-card tracking-empty">
+          <span className="registration-seal">R</span>
+          <h2>Tu próximo proyecto empieza con un equipo</h2>
+          <p>Registra a tu equipo para activar el seguimiento y enviar actividades al asesor.</p>
+          <button className="button-primary" onClick={() => onNavigate?.("registro")}>
+            Registrar mi equipo
+          </button>
+        </section>
+      )}
       {profile.role !== "student" && !teams.length && (
         <p>
           {profile.role === "advisor"

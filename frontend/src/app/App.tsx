@@ -1,10 +1,8 @@
 import { PlatformPage } from "../views/pages/PlatformPage";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { RegistrationPage } from "../views/pages/RegistrationPage";
 import { SimulatorPage } from "../views/pages/SimulatorPage";
 import { DashboardPage } from "../views/pages/DashboardPage";
 import { MotionBackground } from "../views/components/MotionBackground";
-import { TeamsPage } from "../views/pages/TeamsPage";
 import { subscribeAuth, getAuthSnapshot } from "../infrastructure/cloud/client";
 type Section = "plataforma" | "registro" | "automata" | "inicio" | "equipos";
 
@@ -16,18 +14,9 @@ export default function App() {
   const [section, setSection] = useState<Section>("inicio");
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [compact, setCompact] = useState(() => window.matchMedia("(max-width: 1180px)").matches);
+  const compact = true;
   const sidebarRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 1180px)");
-    const resize = () => {
-      setCompact(media.matches);
-      setSidebarOpen(false);
-    };
-    media.addEventListener("change", resize);
-    return () => media.removeEventListener("change", resize);
-  }, []);
   useEffect(() => {
     if (sidebarOpen && compact)
       sidebarRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
@@ -40,9 +29,9 @@ export default function App() {
   const items: { id: Section; label: string; index: string }[] = [
     { id: "inicio", label: "Inicio", index: "01" },
     { id: "plataforma", label: "Mi panel", index: "02" },
-    { id: "registro", label: "Registro local", index: "03" },
+    { id: "registro", label: "Registro", index: "03" },
     { id: "automata", label: "Modelo AFD", index: "04" },
-    { id: "equipos", label: "Seguimiento local", index: "05" },
+    { id: "equipos", label: "Seguimiento", index: "05" },
   ];
   const go = (next: Section) => {
     setSection(next);
@@ -50,7 +39,9 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "instant" });
   };
   return (
-    <div className="app-shell with-sidebar">
+    <div
+      className={`app-shell with-sidebar collapsible-shell ${sidebarOpen ? "sidebar-expanded" : ""}`}
+    >
       <MotionBackground />
       <header>
         <button
@@ -88,7 +79,14 @@ export default function App() {
           aria-controls="sidebar"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          ☰
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path
+              d="M4 6h16M4 12h16M4 18h16"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
         <nav aria-label="Navegación principal">
           {items.map(({ id, label }) => (
@@ -186,27 +184,15 @@ export default function App() {
             onAutomaton={() => go("automata")}
           />
         )}
-        {section === "plataforma" && <PlatformPage />}
-        {(section === "registro" || section === "equipos") && (
-          <p className="demo-notice">
-            DEMO LOCAL · Estos registros no son cuentas ni equipos de la plataforma compartida.
-          </p>
-        )}
-        {section === "registro" && (
-          <RegistrationPage
-            onTeams={() => setSection("equipos")}
-            onRegister={(team) => {
-              try {
-                localStorage.setItem("hackaflow.selectedTeam", team.id);
-              } catch {
-                /* El registro ya está guardado. */
-              }
-            }}
-            onAutomaton={() => setSection("automata")}
+        {(section === "plataforma" || section === "registro" || section === "equipos") && (
+          <PlatformPage
+            mode={
+              section === "registro" ? "registro" : section === "equipos" ? "seguimiento" : "panel"
+            }
+            onNavigate={go}
           />
         )}
         {section === "automata" && <SimulatorPage />}
-        {section === "equipos" && <TeamsPage />}
       </main>
 
       <footer>

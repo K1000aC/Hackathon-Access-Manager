@@ -44,7 +44,11 @@ test("recuperación no se pierde en Inicio; guardar permite entrar con contrase�
     } else if (url.pathname === "/rest/v1/profiles")
       data = { id, display_name: "Persona QA", role: "student", email: "qa@example.com" };
     else if (url.pathname.startsWith("/rest/")) data = [];
-    await route.fulfill({ status, json: data });
+    await route.fulfill({
+      status,
+      json: data,
+      headers: { "x-supabase-api-version": "2024-01-01" },
+    });
   });
   await page.goto(
     `/?flow=recovery#access_token=${token}&refresh_token=fake-refresh-token&expires_in=3600&token_type=bearer&type=recovery`,
@@ -75,4 +79,29 @@ test("un enlace expirado muestra acceso y no abre el panel", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toBeVisible();
   await expect(page.getByRole("status")).toContainText(/expiró|no es válido/);
   await expect(page.getByRole("heading", { name: "Establecer nueva contraseña" })).toHaveCount(0);
+});
+
+test("recuperación informa el límite de correo sin ocultarlo con un error genérico", async ({
+  page,
+}) => {
+  await page.route("https://auth-qa.supabase.co/**", async (route) => {
+    if (new URL(route.request().url()).pathname === "/auth/v1/recover")
+      await route.fulfill({
+        status: 429,
+        headers: { "x-supabase-api-version": "2024-01-01" },
+        json: { code: "over_email_send_rate_limit", msg: "Email rate limit exceeded" },
+      });
+    else await route.fulfill({ status: 200, json: {} });
+  });
+  await page.goto("/");
+  await page
+    .getByRole("navigation", { name: "Navegación principal" })
+    .getByRole("button", { name: "Mi panel", exact: true })
+    .click();
+  await page.getByLabel("Correo", { exact: true }).fill("qa@example.com");
+  await page.getByRole("button", { name: "Olvidé mi contraseña", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Supabase alcanzó el límite de envío de correos",
+  );
+  await expect(page.getByRole("status")).toContainText("over_email_send_rate_limit");
 });

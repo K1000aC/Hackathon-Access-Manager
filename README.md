@@ -32,16 +32,13 @@ El servidor de desarrollo usa el puerto indicado por `PORT` o 8443. `npm run bui
 
 ## Plataforma compartida
 
-Mi panel incorpora cuentas de estudiante, asesor y organizador, envíos a revisión, observaciones, asignación de equipos y certificación tras aprobación. Requiere activar Supabase siguiendo `backend/README.md`. Sin esa configuración se puede seguir usando la demo local. Consulta `docs/platform.md` para el alcance y la compatibilidad móvil.
+Mi panel incorpora cuentas de estudiante, asesor y organizador, envíos a revisión, observaciones, asignación de equipos y certificación tras aprobación. Requiere activar Supabase siguiendo `backend/README.md`. Sin esa configuración las pantallas operativas indican que falta la conexión; el simulador educativo permanece disponible. Consulta `docs/platform.md` para el alcance y la compatibilidad móvil.
 
-## Demostración local
+## Registro y seguimiento
 
-Registro → guardar equipo → Equipos y seguimiento → seleccionar equipo → confirmar mentoría indicando sesión o mentor → entregar enlace HTTP/HTTPS al prototipo → certificación en q3. Los equipos pendientes, eventos y fechas se guardan desde el registro. La constancia final se puede imprimir o guardar como PDF desde el diálogo de impresión.
+Inicio presenta el proyecto y sus creadoras. Registro requiere una cuenta de estudiante y guarda el equipo en Supabase. Seguimiento muestra los equipos y entregas que cada rol puede consultar. Los asesores aprueban o solicitan correcciones; solo las aprobaciones completan R → RM → RMP. Mi panel permite iniciar sesión y administrar roles y asignaciones según el perfil.
 
-La mentoría y la entrega se confirman manualmente para la demo; no se comprueba asistencia externa ni contenido del repositorio. El simulador de Modelo AFD es educativo e independiente: sus cadenas no certifican equipos. Conserva la entrada, el progreso y las últimas 20 pruebas; al regresar se retoma pausado.
-
-El almacenamiento usa `localStorage`, persiste al recargar y sincroniza equipos entre pestañas del mismo origen. No hay base de datos remota ni sincronización entre dispositivos. Los equipos aceptados en la versión anterior se conservan como registros importados sin evidencias. El pase de registro corresponde a q1; la constancia final solo aparece al completar RMP en q3.
-
+No hay un modo operativo alternativo en localStorage. Los registros antiguos permanecen en el navegador sin importarse automáticamente a la base. El simulador educativo sigue siendo independiente y conserva sus cadenas en el navegador; no certifica equipos.
 
 ## Despliegue
 
@@ -49,7 +46,7 @@ Importa el repositorio en Vercel con la raíz del repositorio como Root Director
 
 ## QA de interfaz
 
-La suite de Playwright cubre navegación, registro y persistencia local, seguimiento y simulación AFD en escritorio, Android e iOS emulados. Instrucciones y cobertura en `docs/qa-e2e.md`.
+La suite de Playwright cubre navegación, registro compartido con API simulada, seguimiento y simulación AFD en escritorio, Android e iOS emulados. Instrucciones y cobertura en `docs/qa-e2e.md`.
 
 ```sh
 npx playwright install chromium firefox webkit

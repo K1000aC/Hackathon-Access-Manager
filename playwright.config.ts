@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 const externalURL = process.env.E2E_BASE_URL;
-const baseURL = externalURL || "http://localhost:8443";
+const baseURL = externalURL || "http://localhost:8445";
 export default defineConfig({
   testDir: "./frontend/e2e",
   fullyParallel: true,
@@ -24,8 +24,13 @@ export default defineConfig({
     ? undefined
     : {
         command: "npm run dev",
+        env: {
+          PORT: "8445",
+          VITE_SUPABASE_URL: "https://auth-qa.supabase.co",
+          VITE_SUPABASE_ANON_KEY: "public-test-key",
+        },
         url: baseURL,
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: false,
         timeout: 30000,
         stdout: "ignore",
         stderr: "pipe",
