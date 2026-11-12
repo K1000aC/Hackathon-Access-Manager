@@ -20,3 +20,12 @@ logs/
 /.opencode-skills/
 
 !frontend/.env.example
+
+# Reportes y evidencias de QA
+/playwright-report/
+/test-results/
+/blob-report/
+
+# Accesos privados generados para QA
+/backend/.env.qa.local
+/backend/.local/

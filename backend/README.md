@@ -11,7 +11,7 @@ Los datos locales de la demostración no se envían a la nube ni se convierten e
 ## Puesta en marcha
 
 1. Crea un proyecto Supabase y ejecuta `migrations/001_platform.sql` una vez en SQL Editor, antes de registrar cuentas.
-2. En Auth, habilita correo/contraseña, confirmación de correo y configura Site URL con el dominio de Vercel. Incluye ese dominio y la URL local de desarrollo en las redirecciones permitidas.
+2. En Auth, habilita correo/contraseña, confirmación de correo y configura Site URL con el dominio de Vercel. Incluye ese dominio y la URL local de desarrollo en las redirecciones permitidas, además de `https://hackathon-access-manager.vercel.app/?flow=recovery` y `http://localhost:8443/?flow=recovery` para recuperación.
 3. Copia `frontend/.env.example` a `frontend/.env.local`. Completa `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` con la URL y la clave pública anon o publishable. No uses claves secretas ni service_role en el frontend.
 4. Añade esas dos variables en Vercel y vuelve a desplegar. Vite las incorpora durante la compilación. En desarrollo reinicia Vite después de configurar el entorno.
 5. Registra la cuenta del organizador desde la aplicación y confirma su correo. Con acceso administrativo al SQL Editor, asigna el primer organizador usando su correo real:

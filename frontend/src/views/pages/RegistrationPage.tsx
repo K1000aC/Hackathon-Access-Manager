@@ -3,7 +3,6 @@ import type { TeamPass } from "../../model/team";
 import { registerTeam } from "../../controller/teamController";
 import { icons } from "../components/icons";
 import { AccessPass } from "../components/AccessPass";
-import { MaximalBackground } from "../components/MaximalBackground";
 export function RegistrationPage({
   onAutomaton,
   onTeams,
@@ -46,45 +45,29 @@ export function RegistrationPage({
 
   return (
     <div className="registration-page">
-      <MaximalBackground />
       <section className="registration-hero">
-        <div className="hero-index">
-          <span>01</span>
-          <i />
-          <small>ACREDITACIÓN</small>
-        </div>
-        <div className="registration-copy">
+        <div className="registration-context">
           <div className="eyebrow">
-            <span /> HACKATÓN · CONTROL DE ACCESO 2025
+            <span /> REGISTRO / DEMO LOCAL
           </div>
-          <h1>
-            ENTRA.
-            <br />
-            <em>CREA.</em>
-            <br />
-            TRANSFORMA.
-          </h1>
-          <div className="title-sticker">PASE DE EQUIPO</div>
+          <h1>Tu equipo empieza aquí.</h1>
           <p>
-            Registra a tu equipo y guarda su pase de registro. Después confirma la mentoría y
-            entrega el prototipo para obtener la certificación final.
+            Completa los datos para guardar el pase de registro y continuar con la mentoría y el
+            prototipo.
           </p>
-          <div className="event-meta">
-            <div>
-              <span>FECHA</span>
-              <b>18–20 OCT</b>
-            </div>
-            <div>
-              <span>SEDE</span>
-              <b>HUB CENTRAL</b>
-            </div>
-            <div>
-              <span>CUPOS</span>
-              <b>64 EQUIPOS</b>
-            </div>
+          <div className="registration-requirements">
+            <b>01 · Registra</b>
+            <p>Identifica al equipo y a su representante.</p>
+            <b>02 · Participa</b>
+            <p>Confirma la mentoría y prepara tu entrega.</p>
+            <b>03 · Certifica</b>
+            <p>Completa el recorrido R → M → P.</p>
           </div>
+          <p>
+            Para participar con tu cuenta y recibir revisiones de un asesor, utiliza Mi panel. Este
+            formulario conserva la demostración local de la materia.
+          </p>
         </div>
-
         <section className="registration-panel">
           <div className="panel-number">REG / 001</div>
           {!pass ? (

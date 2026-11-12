@@ -46,3 +46,15 @@ El almacenamiento usa `localStorage`, persiste al recargar y sincroniza equipos 
 ## Despliegue
 
 Importa el repositorio en Vercel con la raíz del repositorio como Root Directory. `vercel.json` configura la compilación, `frontend/dist` y el fallback de navegación de la SPA. El frontend funciona en el dominio asignado sin direcciones de servidor locales en el código.
+
+## QA de interfaz
+
+La suite de Playwright cubre navegación, registro y persistencia local, seguimiento y simulación AFD en escritorio, Android e iOS emulados. Instrucciones y cobertura en `docs/qa-e2e.md`.
+
+```sh
+npx playwright install chromium firefox webkit
+npm run test:e2e
+npm run test:e2e:report
+```
+
+La portada Inicio presenta el proyecto, la visión, la proyección y la acreditación del evento. El registro tiene una pantalla separada. La navegación lateral permanece visible en escritorio y se abre como menú en pantallas pequeñas; el fondo animado respeta movimiento reducido.

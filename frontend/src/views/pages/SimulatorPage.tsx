@@ -131,6 +131,9 @@ export function SimulatorPage() {
           </div>
 
           <div
+            data-testid="simulation-result"
+            role="status"
+            aria-live="polite"
             className={`result-panel ${automaton.isComplete ? (automaton.accepted ? "accepted" : "rejected") : ""}`}
           >
             <span className="result-icon">

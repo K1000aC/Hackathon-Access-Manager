@@ -68,6 +68,7 @@ export function AutomatonDiagram({
           return (
             <div className="state-column" key={id}>
               <div
+                data-testid={`state-${id}`}
                 className={`state-node ${id === activeState ? "active" : ""} ${state.accepting ? "accepting" : ""}`}
               >
                 {state.accepting && <span className="inner-ring" />}
@@ -80,7 +81,7 @@ export function AutomatonDiagram({
         })}
       </div>
       {activeState === "qerr" && (
-        <div className="error-orbit">
+        <div className="error-orbit" data-testid="state-qerr">
           <span>qerr</span>
           <small>Estado de rechazo</small>
         </div>
