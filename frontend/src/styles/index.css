@@ -4144,3 +4144,41 @@ footer small {
   background: rgb(194 24 91 / 0.15);
   line-height: 1.7;
 }
+.project-management {
+  display: grid;
+  gap: 22px;
+}
+.project-summary {
+  display: grid;
+  gap: 18px;
+}
+.project-summary h3 {
+  font-size: 26px;
+}
+.project-link-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.project-link-actions a {
+  padding: 14px 18px;
+  min-height: 48px;
+  border-radius: 10px;
+  text-align: center;
+}
+.public-links-check {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: 12px;
+}
+.public-links-check input {
+  width: 20px !important;
+  min-height: 20px !important;
+  height: 20px !important;
+  flex: 0 0 20px;
+  accent-color: #c2185b;
+}
+.project-management textarea {
+  min-height: 140px;
+}

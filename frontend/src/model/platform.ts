@@ -15,6 +15,10 @@ export interface EventTeam {
   category: string;
   members: number;
   chain: "R" | "RM" | "RMP";
+  final_grade?: number | null;
+  final_feedback?: string;
+  final_reviewed_by?: string | null;
+  final_reviewed_at?: string | null;
   created_at: string;
   events: { symbol: string; at: string; detail: string; actor: string }[];
 }
@@ -27,6 +31,7 @@ export interface Submission {
   submitted_at: string;
   reviewed_at: string | null;
   feedback: string;
+  attachment_path?: string;
 }
 export const roleNames: Record<Role, string> = {
   student: "Estudiante",
@@ -48,3 +53,6 @@ export const roleSourceNames = {
   developer: "Alta administrativa",
   legacy: "Registro anterior",
 };
+
+export const hasFinalCertificate = (team: EventTeam) =>
+  team.chain === "RMP" && typeof team.final_grade === "number" && Boolean(team.final_reviewed_by);

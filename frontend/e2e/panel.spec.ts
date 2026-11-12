@@ -28,7 +28,7 @@ async function setup(
           {
             id: "work-1",
             team_id: teamId,
-            kind: "sprint",
+            kind: "task",
             title: "Sprint 1",
             detail: "Primer avance",
             evidence_url: "",
@@ -38,11 +38,26 @@ async function setup(
           },
         ];
   const calls: string[] = [];
+  let management: Record<string, unknown> | null = null;
   await page.route("https://auth-qa.supabase.co/**", async (route) => {
     const r = route.request(),
       u = new URL(r.url());
     if (u.pathname === "/rest/v1/profiles")
       return route.fulfill({ json: u.searchParams.has("id") ? people[0] : people });
+    if (u.pathname === "/rest/v1/project_management") return route.fulfill({ json: management });
+    if (u.pathname === "/rest/v1/rpc/save_project_management") {
+      const v = r.postDataJSON();
+      management = {
+        board_url: v.p_board_url,
+        repository_url: v.p_repository_url,
+        summary: v.p_summary,
+        status: "pending",
+        feedback: "",
+        public_verified_by: null,
+      };
+      calls.push("management");
+      return route.fulfill({ json: null });
+    }
     if (u.pathname === "/rest/v1/event_teams") return route.fulfill({ json: [team] });
     if (u.pathname === "/rest/v1/submissions") return route.fulfill({ json: [] });
     if (u.pathname === "/rest/v1/work_items")
@@ -117,43 +132,49 @@ test("organizador: subpestañas y tabla de roles con búsqueda y guardado explí
   await page.getByRole("tab", { name: "Equipos", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Neon Builders", exact: true })).toBeVisible();
 });
-test("estudiante: equipo, backlog con archivo y sprint compartidos, sin controles administrativos", async ({
-  page,
-}, info) => {
+test("estudiante: gestión unificada con enlaces públicos y tarea con PPTX", async ({ page }) => {
   const calls = await setup(page, "student");
   await page.getByRole("tab", { name: "Mi perfil", exact: true }).click();
   await expect(page.getByText("Administrar usuarios y roles", { exact: false })).toHaveCount(0);
-  await page.getByRole("tab", { name: "Backlog", exact: true }).click();
-  await page.getByText("Añadir actividad al backlog", { exact: true }).click();
-  await page.getByLabel("Título", { exact: true }).fill("Historias de usuario");
+  await page.getByRole("tab", { name: "Backlog / Sprints", exact: true }).click();
   await page
-    .getByLabel("Descripción y objetivos", { exact: true })
-    .fill("Definir las historias de usuario prioritarias.");
-  await page.getByLabel("Adjuntar archivo (opcional)", { exact: true }).setInputFiles({
-    name: "backlog.txt",
-    mimeType: "text/plain",
-    buffer: Buffer.from("Historia 1"),
-  });
+    .getByLabel("Enlace público del tablero Backlog/Sprints", { exact: true })
+    .fill("https://github.com/users/equipo/projects/1");
+  await page
+    .getByLabel("Enlace público del repositorio", { exact: true })
+    .fill("https://github.com/equipo/repo");
+  await page
+    .getByLabel("Resumen del avance", { exact: true })
+    .fill("Sprint 1: prototipo en curso.");
+  await page.getByLabel("Confirmo que ambos enlaces son públicos", { exact: false }).check();
+  await page.getByRole("button", { name: "Guardar gestión del proyecto", exact: true }).click();
+  await expect(
+    page.getByText("Visibilidad pendiente de revisión del asesor", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Abrir repositorio público", exact: false }),
+  ).toHaveAttribute("href", "https://github.com/equipo/repo");
+  await page.getByRole("tab", { name: "Mis entregas", exact: true }).click();
+  await page.getByText("Añadir nueva entrega / tarea", { exact: true }).click();
+  await page.getByLabel("Título", { exact: true }).fill("Presentación del proyecto");
+  await page.getByLabel("Descripción y objetivos", { exact: true }).fill("Propuesta inicial");
+  await page
+    .getByLabel("Adjuntar archivo (opcional)", { exact: true })
+    .setInputFiles({
+      name: "propuesta.pptx",
+      mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      buffer: Buffer.from("QA presentation"),
+    });
   await page.getByRole("button", { name: "Enviar trabajo a revisión", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Historias de usuario", exact: true }),
+    page.getByRole("heading", { name: "Presentación del proyecto", exact: true }),
   ).toBeVisible();
-  expect(calls).toEqual(["upload", "save"]);
+  expect(calls).toEqual(["management", "upload", "save"]);
   await expect(page.getByRole("button", { name: "Aprobar trabajo", exact: true })).toHaveCount(0);
-  await page.screenshot({ path: info.outputPath("backlog-estudiante.png"), fullPage: true });
-  await page.getByRole("tab", { name: "Sprints", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "Historias de usuario", exact: true }),
-  ).toHaveCount(0);
-  await page.getByText("Añadir sprint", { exact: true }).click();
-  await page.getByLabel("Título", { exact: true }).fill("Sprint 1");
-  await page.getByLabel("Descripción y objetivos", { exact: true }).fill("Diseñar el prototipo");
-  await page.getByRole("button", { name: "Guardar en preparación", exact: true }).click();
-  await expect(page.getByText("En preparación", { exact: true })).toBeVisible();
 });
 test("asesor: revisa un sprint con observaciones desde su panel", async ({ page }) => {
   const calls = await setup(page, "advisor");
-  await page.getByRole("tab", { name: "Sprints", exact: true }).click();
+  await page.getByRole("tab", { name: "Por revisar", exact: true }).click();
   await page.getByLabel("Observaciones del trabajo", { exact: true }).fill("Falta evidencia");
   await page.getByRole("button", { name: "Solicitar corrección del trabajo", exact: true }).click();
   await expect(page.getByText("Requiere correcciones", { exact: true })).toBeVisible();

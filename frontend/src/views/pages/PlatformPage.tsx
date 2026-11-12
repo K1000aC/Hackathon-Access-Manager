@@ -6,6 +6,7 @@ import {
   nextStage,
   roleNames,
   roleSourceNames,
+  hasFinalCertificate,
   stageNames,
   statusNames,
   type EventTeam,
@@ -463,6 +464,7 @@ function SubmitStage({ team, action }: { team: EventTeam; action: Action }) {
   const stage = nextStage(team.chain);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [hasFile, setHasFile] = useState(false);
   if (!stage) return null;
   return (
     <form
@@ -471,13 +473,45 @@ function SubmitStage({ team, action }: { team: EventTeam; action: Action }) {
       onSubmit={async (event) => {
         event.preventDefault();
         const form = event.currentTarget;
-        const detail = String(new FormData(form).get("detail"));
+        const values = new FormData(form);
+        const file = values.get("attachment") as File;
+        const detail =
+          String(values.get("detail") ?? "").trim() ||
+          (file?.size ? `Archivo adjunto: ${file.name}` : "");
+        let path = "";
         setBusy(true);
         setError("");
         try {
-          await action("submit_stage", { p_team_id: team.id, p_stage: stage, p_detail: detail });
+          if (file?.size) {
+            const ext = file.name.split(".").pop()?.toLowerCase();
+            const types: Record<string, string> = {
+              pdf: "application/pdf",
+              docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            };
+            if (!ext || !types[ext] || file.size > 10 * 1024 * 1024)
+              throw new Error("Adjunta PDF, DOCX o PPTX de hasta 10 MB.");
+            const { data: user } = await cloud!.auth.getUser();
+            if (!user.user) throw new Error("Inicia sesión de nuevo.");
+            path = `${team.id}/${user.user.id}/${crypto.randomUUID()}.${ext}`;
+            const uploaded = await cloud!.storage
+              .from("team-work")
+              .upload(path, file, { contentType: types[ext], upsert: false });
+            if (uploaded.error) {
+              path = "";
+              throw new Error("No se pudo subir el archivo.");
+            }
+          }
+          await action("submit_stage", {
+            p_team_id: team.id,
+            p_stage: stage,
+            p_detail: detail,
+            ...(path ? { p_attachment_path: path } : {}),
+          });
           form.reset();
+          setHasFile(false);
         } catch (error) {
+          if (path) await cloud!.storage.from("team-work").remove([path]);
           setError(error instanceof Error ? error.message : "No se pudo enviar.");
         } finally {
           setBusy(false);
@@ -490,16 +524,28 @@ function SubmitStage({ team, action }: { team: EventTeam; action: Action }) {
           ? "Describe la sesión y el mentor con quien asististe"
           : "Enlace al repositorio o prototipo"}
         {stage === "M" ? (
-          <textarea name="detail" required maxLength={2000} />
+          <textarea name="detail" required={!hasFile} maxLength={2000} />
         ) : (
           <input
             name="detail"
             type="url"
-            required
+            required={!hasFile}
             maxLength={2000}
             placeholder="https://github.com/equipo/proyecto"
           />
         )}
+      </label>
+      <label>
+        Archivo de la entrega (opcional)
+        <input
+          name="attachment"
+          type="file"
+          accept=".pdf,.docx,.pptx"
+          onChange={(e) => setHasFile(Boolean(e.target.files?.[0]))}
+        />
+        <small>
+          PDF, DOCX o PPTX · máximo 10 MB. Puedes compartir un enlace o adjuntar tu propuesta.
+        </small>
       </label>
       <button className="button-primary" disabled={busy}>
         Enviar para aprobación
@@ -508,13 +554,34 @@ function SubmitStage({ team, action }: { team: EventTeam; action: Action }) {
     </form>
   );
 }
-function Review({ submission, action }: { submission: Submission; action: Action }) {
+function Review({
+  submission,
+  action,
+  canApproveFinal,
+}: {
+  submission: Submission;
+  action: Action;
+  canApproveFinal: boolean;
+}) {
   const [feedback, setFeedback] = useState("");
+  const [grade, setGrade] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const decide = async (approve: boolean) => {
     if (!approve && !feedback.trim()) {
       setError("Explica qué debe corregir el equipo.");
+      return;
+    }
+    if (
+      approve &&
+      submission.stage === "P" &&
+      (!canApproveFinal ||
+        grade === "" ||
+        !Number.isFinite(Number(grade)) ||
+        Number(grade) < 0 ||
+        Number(grade) > 100)
+    ) {
+      setError("El asesor asignado debe calificar de 0 a 100 la entrega final.");
       return;
     }
     setBusy(true);
@@ -524,6 +591,7 @@ function Review({ submission, action }: { submission: Submission; action: Action
         p_submission_id: submission.id,
         p_approve: approve,
         p_feedback: feedback,
+        ...(submission.stage === "P" ? { p_grade: approve ? Number(grade) : null } : {}),
       });
     } catch (error) {
       setError(error instanceof Error ? error.message : "No se pudo revisar.");
@@ -541,8 +609,28 @@ function Review({ submission, action }: { submission: Submission; action: Action
           maxLength={2000}
         />
       </label>
+      {submission.stage === "P" &&
+        (canApproveFinal ? (
+          <label>
+            Calificación final (0 a 100)
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={grade}
+              onChange={(e) => setGrade(e.target.value)}
+            />
+          </label>
+        ) : (
+          <p>La aprobación y calificación final corresponden al asesor asignado.</p>
+        ))}
       <div className="portal-actions">
-        <button className="button-primary" disabled={busy} onClick={() => void decide(true)}>
+        <button
+          className="button-primary"
+          disabled={busy || (submission.stage === "P" && !canApproveFinal)}
+          onClick={() => void decide(true)}
+        >
           Aprobar etapa
         </button>
         <button className="button-secondary" disabled={busy} onClick={() => void decide(false)}>
@@ -551,6 +639,46 @@ function Review({ submission, action }: { submission: Submission; action: Action
       </div>
       <p role="alert">{error}</p>
     </div>
+  );
+}
+function GradeFinal({ team, action }: { team: EventTeam; action: Action }) {
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  return (
+    <form
+      className="portal-form"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (busy) return;
+        const v = new FormData(e.currentTarget);
+        setBusy(true);
+        setError("");
+        try {
+          await action("grade_final_delivery", {
+            p_team_id: team.id,
+            p_grade: Number(v.get("grade")),
+            p_feedback: String(v.get("feedback")),
+          });
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "No se pudo calificar.");
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <label>
+        Calificación final (0 a 100)
+        <input name="grade" type="number" min="0" max="100" step="0.01" required />
+      </label>
+      <label>
+        Observaciones de la calificación
+        <textarea name="feedback" maxLength={2000} />
+      </label>
+      <button className="button-primary" disabled={busy}>
+        Guardar calificación final
+      </button>
+      <p role="alert">{error}</p>
+    </form>
   );
 }
 function TeamPanel({
@@ -577,7 +705,9 @@ function TeamPanel({
       <p>
         {team.advisor_id ? "Asesor asignado" : "Pendiente de asignación de asesor"} ·{" "}
         {team.chain === "RMP"
-          ? "Proyecto certificado"
+          ? hasFinalCertificate(team)
+            ? "Proyecto con certificado de finalización"
+            : "Entrega final sin calificación registrada"
           : team.chain === "R"
             ? "Pendiente de mentoría aprobada"
             : "Pendiente de prototipo aprobado"}
@@ -650,9 +780,27 @@ function TeamPanel({
           ) : (
             <p>{item.detail}</p>
           )}
+          {item.attachment_path && (
+            <button
+              className="dashboard-link"
+              onClick={async () => {
+                const { data, error } = await cloud!.storage
+                  .from("team-work")
+                  .createSignedUrl(item.attachment_path!, 60, { download: true });
+                if (error || !data) setNotice("No se pudo descargar la entrega.");
+                else window.location.assign(data.signedUrl);
+              }}
+            >
+              Descargar archivo de entrega ↓
+            </button>
+          )}
           {item.feedback && <p>Observaciones: {item.feedback}</p>}
           {item.status === "pending" && profile.role !== "student" && (
-            <Review submission={item} action={action} />
+            <Review
+              submission={item}
+              action={action}
+              canApproveFinal={profile.role === "advisor" && team.advisor_id === profile.id}
+            />
           )}
         </section>
       ))}
@@ -672,14 +820,38 @@ function TeamPanel({
           activeState={team.chain === "R" ? "q1" : team.chain === "RM" ? "q2" : "q3"}
         />
       </details>
-      {team.chain === "RMP" && (
+      {team.chain === "RMP" && !hasFinalCertificate(team) && (
+        <section className="history-card">
+          <h3>Entrega final pendiente de calificación</h3>
+          <p>
+            Para emitir el certificado de finalización, el asesor asignado debe registrar la nota de
+            la propuesta final aprobada.
+          </p>
+          {profile.role === "advisor" && team.advisor_id === profile.id && (
+            <GradeFinal team={team} action={action} />
+          )}
+        </section>
+      )}
+      {hasFinalCertificate(team) && (
         <section className="certificate">
           <p>HACKAFLOW</p>
-          <h2>Proyecto certificado</h2>
+          <h2>Certificado de finalización</h2>
           <h3>{team.name}</h3>
-          <p>Registro, mentoría y prototipo completados. RMP → q3.</p>
+          <p>
+            La propuesta final del proyecto fue entregada, revisada, aprobada y calificada por el
+            asesor asignado. Registro, mentoría y prototipo completados.
+          </p>
+          <p>
+            Calificación final: <strong>{team.final_grade}/100</strong>
+          </p>
+          <p>
+            Fecha de revisión:{" "}
+            {team.final_reviewed_at
+              ? new Date(team.final_reviewed_at).toLocaleString("es-MX")
+              : "Registrada"}
+          </p>
+          {team.final_feedback && <p>Observaciones del asesor: {team.final_feedback}</p>}
           <p>Folio {team.id}</p>
-          <p>{new Date(team.events[2].at).toLocaleString("es-MX")}</p>
           <button className="button-primary" onClick={() => window.print()}>
             Imprimir / guardar PDF
           </button>
@@ -1028,8 +1200,8 @@ export function PlatformPage({
       (filter === "revision"
         ? submissions.some((item) => item.team_id === team.id && item.status === "pending")
         : filter === "certificados"
-          ? team.chain === "RMP"
-          : team.chain !== "RMP"),
+          ? hasFinalCertificate(team)
+          : !hasFinalCertificate(team)),
   );
   const team = filtered.find((item) => item.id === selected) ?? filtered[0];
   return (
@@ -1085,7 +1257,7 @@ export function PlatformPage({
           <span>En revisión</span>
         </div>
         <div>
-          <strong>{teams.filter((team) => team.chain === "RMP").length}</strong>
+          <strong>{teams.filter(hasFinalCertificate).length}</strong>
           <span>Certificados</span>
         </div>
       </div>

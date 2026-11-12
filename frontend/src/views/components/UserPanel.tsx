@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import type { EventTeam, Profile, Submission } from "../../model/platform";
-import { roleNames, roleSourceNames } from "../../model/platform";
+import { roleNames, roleSourceNames, hasFinalCertificate } from "../../model/platform";
+import { ProjectManagement } from "./ProjectManagement";
 import { WorkBoard } from "./WorkBoard";
 export function UserPanel({
   profile,
@@ -27,13 +28,12 @@ export function UserPanel({
   const [selected, setSelected] = useState("");
   const student = profile.role === "student";
   const pending = submissions.filter((s) => s.status === "pending");
-  const certified = teams.filter((t) => t.chain === "RMP");
+  const certified = teams.filter(hasFinalCertificate);
   const tabs = [
     ["resumen", "Resumen"],
     ["equipos", student ? "Mi equipo" : "Equipos"],
     ["entregas", student ? "Mis entregas" : "Por revisar"],
-    ["backlog", "Backlog"],
-    ["sprints", "Sprints"],
+    ["gestion", "Backlog / Sprints"],
     ["certificados", "Certificados"],
     ["perfil", "Mi perfil"],
   ];
@@ -52,6 +52,10 @@ export function UserPanel({
             key={id}
             id={`panel-tab-${id}`}
             role="tab"
+            aria-label={label}
+            aria-describedby={
+              id === "entregas" && pending.length > 0 ? "panel-pending-count" : undefined
+            }
             aria-selected={tab === id}
             aria-controls="panel-tab-content"
             tabIndex={tab === id ? 0 : -1}
@@ -78,7 +82,9 @@ export function UserPanel({
             }}
           >
             {label}
-            {id === "entregas" && pending.length > 0 && <span>{pending.length}</span>}
+            {id === "entregas" && pending.length > 0 && (
+              <span id="panel-pending-count">{pending.length} pendientes</span>
+            )}
           </button>
         ))}
       </div>
@@ -181,13 +187,14 @@ export function UserPanel({
             {profile.role === "organizer" && roles}
           </>
         )}
-        {(tab === "backlog" || tab === "sprints") && (
-          <WorkBoard
-            key={tab}
-            kind={tab === "backlog" ? "backlog" : "sprint"}
-            profile={profile}
-            teams={teams}
-          />
+        {tab === "gestion" && <ProjectManagement profile={profile} teams={teams} />}
+        {tab === "entregas" && <WorkBoard kind="task" profile={profile} teams={teams} />}
+        {tab === "certificados" && (
+          <p className="work-explanation">
+            Certificado de finalización: acredita que el equipo entregó su propuesta final de
+            proyecto y que el asesor asignado la revisó, aprobó y calificó. Sin entrega final
+            aprobada y calificación registrada no se emite el certificado.
+          </p>
         )}
         {["equipos", "entregas", "certificados"].includes(tab) && (
           <>
@@ -196,11 +203,11 @@ export function UserPanel({
                 <span>MI PANEL / {tabs.find((t) => t[0] === tab)?.[1].toUpperCase()}</span>
                 <h2>
                   {tab === "certificados"
-                    ? "Proyectos certificados"
+                    ? "Certificados de finalización"
                     : tab === "entregas"
                       ? student
-                        ? "Mis entregas y observaciones"
-                        : "Entregas pendientes de revisión"
+                        ? "Etapas del acceso y propuesta final"
+                        : "Etapas del acceso pendientes de revisión"
                       : student
                         ? "Mi equipo y su acceso"
                         : "Equipos del evento"}
@@ -214,7 +221,7 @@ export function UserPanel({
                   {tab === "certificados"
                     ? "Aún no hay certificados"
                     : tab === "entregas" && !student
-                      ? "No hay entregas por revisar"
+                      ? "No hay etapas del acceso por revisar"
                       : "Aún no hay equipos disponibles"}
                 </h3>
                 <p>
