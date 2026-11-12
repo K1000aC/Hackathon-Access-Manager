@@ -218,7 +218,7 @@ function FormalCard() {
           <p>{"{ q₃ }"}</p>
         </div>
       </div>
-      <p>δ: Q × Σ → Q · L(M) = { RMP }. ε y los prefijos R, RM no son aceptados. qerr es un estado sumidero; q3 rechaza cualquier evento adicional.</p>
+      <p>δ: Q × Σ → Q · L(M) = {"{ RMP }"}. ε y los prefijos R, RM no son aceptados. qerr es un estado sumidero; q3 rechaza cualquier evento adicional.</p>
       <div className="transition-table"><table>
         <caption>Función de transición δ completa</caption>
         <thead><tr><th scope="col">Estado</th>{alphabet.map(symbol => <th scope="col" key={symbol}>{symbol}</th>)}</tr></thead>
