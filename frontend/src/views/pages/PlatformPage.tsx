@@ -1127,7 +1127,10 @@ export function PlatformPage({
         <button className="button-primary" onClick={() => void platform.refresh()}>
           Reintentar
         </button>
-        <button className="button-secondary" onClick={() => void cloud?.auth.signOut()}>
+        <button
+          className="button-secondary"
+          onClick={() => void cloud?.auth.signOut({ scope: "local" })}
+        >
           Cerrar sesión
         </button>
       </section>
@@ -1177,7 +1180,7 @@ export function PlatformPage({
         onRegister={() => onNavigate?.("registro")}
         onTracking={() => onNavigate?.("equipos")}
         onLogout={() =>
-          void cloud!.auth.signOut().then((result) => {
+          void cloud!.auth.signOut({ scope: "local" }).then((result) => {
             if (result.error) setNotice(result.error.message);
           })
         }
@@ -1225,7 +1228,7 @@ export function PlatformPage({
           <button
             className="button-secondary"
             onClick={async () => {
-              const result = await cloud!.auth.signOut();
+              const result = await cloud!.auth.signOut({ scope: "local" });
               if (result.error) setNotice(result.error.message);
             }}
           >

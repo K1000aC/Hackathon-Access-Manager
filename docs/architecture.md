@@ -19,4 +19,4 @@ Se retiraron las herramientas de publicación, análisis de rutas, previsualizac
 
 `backend/migrations` define el backend Supabase: perfiles, equipos, entregas, políticas RLS y funciones de registro, revisión y asignación. `infrastructure/cloud` configura el cliente; `controller/usePlatform` coordina sesión y consultas; `views/pages/PlatformPage` presenta los paneles por rol. La configuración y activación están en `backend/README.md`.
 
-La demo local y la plataforma compartida tienen datos separados. Las contraseñas se gestionan con Supabase Auth. La plataforma necesita conexión; el simulador académico sigue disponible sin modificar equipos.
+La demo local y la plataforma compartida tienen datos separados. Las contraseñas se gestionan con Supabase Auth. La sesión de la plataforma se persiste en `sessionStorage` con una clave de Auth única por pestaña; cerrar sesión o alcanzar 15 minutos de inactividad afecta solo a esa pestaña. La interfaz avisa un minuto antes del cierre automático. La plataforma necesita conexión; el simulador académico sigue disponible sin modificar equipos.

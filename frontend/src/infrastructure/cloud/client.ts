@@ -5,6 +5,12 @@ export const cloudConfigured = Boolean(url && key);
 const hash = new URLSearchParams(window.location.hash.slice(1));
 const query = new URLSearchParams(window.location.search);
 const recoveryKey = "hackaflow.passwordRecovery";
+const authTabKey = "hackaflow.authTabId";
+let authTabId = sessionStorage.getItem(authTabKey);
+if (!authTabId) {
+  authTabId = crypto.randomUUID();
+  sessionStorage.setItem(authTabKey, authTabId);
+}
 const recoveryInURL = hash.get("type") === "recovery" || query.get("flow") === "recovery";
 function pendingRecovery() {
   try {
@@ -63,7 +69,33 @@ export function finishRecovery() {
   };
   listeners.forEach((listener) => listener());
 }
-export const cloud = cloudConfigured ? createClient(url, key) : null;
+export const cloud = cloudConfigured
+  ? createClient(url, key, {
+      auth: {
+        storageKey: `hackaflow-${authTabId}-auth-token`,
+        storage: window.sessionStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
+  : null;
+
+export async function signOutForInactivity() {
+  if (!cloud) throw new Error("La plataforma no está configurada.");
+  const { error } = await cloud.auth.signOut({ scope: "local" });
+  if (error) throw new Error(error.message);
+  rememberRecovery(false);
+  snapshot = {
+    ...snapshot,
+    session: null,
+    recovery: false,
+    ready: true,
+    notice: "La sesión se cerró por inactividad. Inicia sesión para continuar.",
+  };
+  listeners.forEach((listener) => listener());
+}
+
 // Suscribirse inmediatamente: los enlaces pueden procesarse antes de montar cualquier pantalla.
 cloud?.auth.onAuthStateChange((event, session) => {
   const recovery = event === "PASSWORD_RECOVERY" || (snapshot.recovery && Boolean(session));
