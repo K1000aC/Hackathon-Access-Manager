@@ -1973,3 +1973,10 @@ footer small {
     gap: 12px;
   }
 }
+
+.transition-table { overflow-x: auto; margin: 20px 0; }
+.transition-table table { width: 100%; border-collapse: collapse; color: #FFFFFF; }
+.transition-table th, .transition-table td { padding: 10px; border: 1px solid #7B1FA2; text-align: center; }
+.transition-table caption { padding: 12px; text-align: left; }
+.transition-table thead { background: #7B1FA2; }
+.accepted-team { padding: 22px; margin-top: 20px; border: 1px solid #C2185B; background: #1A0033; overflow-wrap: anywhere; }

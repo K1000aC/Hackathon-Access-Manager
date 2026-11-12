@@ -1,17 +1,10 @@
-import { useState, type FormEvent, type ReactNode } from "react";
-import { states, type StateId } from "./model/automaton";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { alphabet, transitions, states, type StateId } from "./model/automaton";
 import { useAutomatonController } from "./controller/useAutomatonController";
 
-type Section = "registro" | "automata" | "proyecto";
+type Section = "registro" | "automata" | "proyecto" | "equipos";
 
-interface TeamPass {
-  id: string;
-  teamName: string;
-  leader: string;
-  email: string;
-  category: string;
-  members: string;
-}
+import { listAcceptedTeams, saveAcceptedTeam, type TeamPass } from "./model/teamRepository";
 
 function Icon({
   children,
@@ -225,6 +218,12 @@ function FormalCard() {
           <p>{"{ q₃ }"}</p>
         </div>
       </div>
+      <p>δ: Q × Σ → Q · L(M) = { RMP }. ε y los prefijos R, RM no son aceptados. qerr es un estado sumidero; q3 rechaza cualquier evento adicional.</p>
+      <div className="transition-table"><table>
+        <caption>Función de transición δ completa</caption>
+        <thead><tr><th scope="col">Estado</th>{alphabet.map(symbol => <th scope="col" key={symbol}>{symbol}</th>)}</tr></thead>
+        <tbody>{(Object.keys(states) as StateId[]).map(id => <tr key={id}><th scope="row">{id === "q0" ? "→ " : id === "q3" ? "* " : ""}{id}</th>{alphabet.map(symbol => <td key={symbol}>{transitions[id][symbol]}</td>)}</tr>)}</tbody>
+      </table></div>
       <div className="legend">
         <span>
           <b>R</b> Registro
@@ -305,7 +304,7 @@ function AccessPass({ pass }: { pass: TeamPass }) {
   );
 }
 
-function RegistrationPage({ onAutomaton }: { onAutomaton: () => void }) {
+function RegistrationPage({ onAutomaton, onRegister }: { onAutomaton: () => void; onRegister: (team: TeamPass) => void }) {
   const [pass, setPass] = useState<TeamPass | null>(null);
   const [form, setForm] = useState({
     teamName: "",
@@ -321,10 +320,9 @@ function RegistrationPage({ onAutomaton }: { onAutomaton: () => void }) {
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setPass({
-      ...form,
-      id: `HF-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
-    });
+    const team = { ...form, id: `HF-${crypto.randomUUID()}` };
+    setPass(team);
+    onRegister(team);
   };
 
   return (
@@ -502,7 +500,8 @@ function RegistrationPage({ onAutomaton }: { onAutomaton: () => void }) {
   );
 }
 
-function Simulator() {
+function Simulator({ team }: { team: TeamPass | null }) {
+  const [notice, setNotice] = useState("");
   const automaton = useAutomatonController();
   const activeStep = automaton.cursor ? automaton.steps[automaton.cursor - 1] : undefined;
 
@@ -511,7 +510,7 @@ function Simulator() {
       <section className="hero">
         <div>
           <div className="eyebrow">
-            <span /> TEORÍA DE LA COMPUTACIÓN · PROYECTO AFD
+            <span /> TEORÍA DE LA COMPUTACIÓN · UNIDAD 5
           </div>
           <h1>
             Control de acceso,
@@ -653,6 +652,16 @@ function Simulator() {
         </section>
       </div>
 
+      <section className="history-card">
+        <h2>Validación del equipo</h2>
+        <p>{team ? `Equipo seleccionado: ${team.teamName}` : "Registra un equipo en Acreditación para guardar su historial."}</p>
+        <button className="button-primary" disabled={!team || !automaton.accepted} onClick={() => {
+          if (!team) return;
+          try { saveAcceptedTeam(team, automaton.input); setNotice("Equipo e historial aceptado guardados en la base local."); }
+          catch { setNotice("No se pudo guardar. Comprueba que el almacenamiento del navegador esté disponible."); }
+        }}>Guardar equipo aceptado (q3)</button>
+        <p role="status">{notice}</p>
+      </section>
       <section className="diagram-card">
         <div className="card-heading">
           <div>
@@ -733,7 +742,23 @@ function InfoPage({ section }: { section: "proyecto" }) {
   );
 }
 
+function TeamsPage() {
+  const [teams, setTeams] = useState(listAcceptedTeams);
+  useEffect(() => {
+    const refresh = () => setTeams(listAcceptedTeams());
+    window.addEventListener("storage", refresh);
+    window.addEventListener("hackaflow:teams", refresh);
+    return () => { window.removeEventListener("storage", refresh); window.removeEventListener("hackaflow:teams", refresh); };
+  }, []);
+  return <section className="history-card"><h1>Base oficial · Demo local</h1>
+    <p>{teams.length} equipos aceptados en q3. Persistencia en este navegador; actualización entre pestañas del mismo sitio.</p>
+    {!teams.length && <p>Registra un equipo, procesa RMP y guarda el resultado aceptado en Modelo AFD.</p>}
+    {teams.map(team => <article className="accepted-team" key={team.id}><h2>{team.teamName}</h2><p>{team.leader} · {team.category} · {team.members} integrantes</p><p>{team.id}</p><p>ACEPTADO · {team.input} · {team.path.join(" → ")}</p><time>{new Date(team.acceptedAt).toLocaleString("es-MX")}</time></article>)}
+  </section>;
+}
+
 export default function App() {
+  const [team, setTeam] = useState<TeamPass | null>(null);
   const [section, setSection] = useState<Section>("registro");
 
   return (
@@ -752,6 +777,7 @@ export default function App() {
           {[
             ["registro", "Acreditación"],
             ["automata", "Modelo AFD"],
+            ["equipos", "Equipos aceptados"],
             ["proyecto", "El proyecto"],
           ].map(([id, label]) => (
             <button
@@ -770,8 +796,9 @@ export default function App() {
       </header>
 
       <main>
-        {section === "registro" && <RegistrationPage onAutomaton={() => setSection("automata")} />}
-        {section === "automata" && <Simulator />}
+        {section === "registro" && <RegistrationPage onRegister={setTeam} onAutomaton={() => setSection("automata")} />}
+        {section === "automata" && <Simulator team={team} />}
+        {section === "equipos" && <TeamsPage />}
         {section === "proyecto" && <InfoPage section="proyecto" />}
       </main>
 
