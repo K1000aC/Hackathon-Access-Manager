@@ -125,3 +125,33 @@ test("ingreso presenta identidad, fondo decorativo y formulario sin desbordamien
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("ingreso.png"), fullPage: true });
 });
+
+test("el pie termina la página sin cruzar el contenido en ventanas altas y pequeñas", async ({
+  page,
+}) => {
+  await page.route("https://auth-qa.supabase.co/**", (route) =>
+    route.fulfill({ status: 200, json: {} }),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("navigation", { name: "Navegación principal" })
+    .getByRole("button", { name: "Mi panel", exact: true })
+    .click();
+  for (const height of [1600, 600]) {
+    await page.setViewportSize({ width: page.viewportSize()!.width, height });
+    const layout = await page.evaluate(() => {
+      const main = document.querySelector("main")!.getBoundingClientRect();
+      const footer = document.querySelector("footer")!.getBoundingClientRect();
+      return {
+        contentEnd: main.bottom + scrollY,
+        footerStart: footer.top + scrollY,
+        footerEnd: footer.bottom + scrollY,
+        pageEnd: document.documentElement.scrollHeight,
+        viewport: innerHeight,
+      };
+    });
+    expect(layout.footerStart).toBeGreaterThanOrEqual(layout.contentEnd - 1);
+    expect(layout.footerEnd).toBeGreaterThanOrEqual(layout.viewport - 1);
+    expect(Math.abs(layout.pageEnd - layout.footerEnd)).toBeLessThanOrEqual(2);
+  }
+});
