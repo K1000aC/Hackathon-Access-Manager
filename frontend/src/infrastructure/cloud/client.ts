@@ -76,7 +76,9 @@ cloud?.auth.onAuthStateChange((event, session) => {
     notice:
       !session && snapshot.recovery && event !== "SIGNED_OUT"
         ? "El enlace de recuperación expiró o no es válido. Solicita uno nuevo."
-        : event === "SIGNED_IN" && !recovery ? "" : snapshot.notice,
+        : event === "SIGNED_IN" && !recovery
+          ? ""
+          : snapshot.notice,
   };
   listeners.forEach((listener) => listener());
 });
