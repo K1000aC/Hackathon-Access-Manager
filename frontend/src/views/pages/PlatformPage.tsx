@@ -52,10 +52,28 @@ function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
     }
   };
   return (
-    <section className="portal-auth">
+    <section className="portal-auth auth-entry">
+      <div className="auth-ambient" aria-hidden="true">
+        <span className="auth-orbit" />
+        <span className="auth-orbit" />
+        <span className="auth-glow" />
+        <div className="auth-flow">
+          <b>R</b>
+          <i>→</i>
+          <b>M</b>
+          <i>→</i>
+          <b>P</b>
+        </div>
+      </div>
       <div>
-        <p>HACKAFLOW · PLATAFORMA DEL EVENTO</p>
-        <h1>Tu equipo, cada etapa, un mismo lugar.</h1>
+        <div className="auth-brand">
+          <span className="auth-brand-kicker">TU ACCESO COMIENZA AQUÍ</span>
+          <strong>
+            Hacka<span>Flow</span>
+          </strong>
+          <p>PLATAFORMA DEL EVENTO</p>
+        </div>
+        <h1>Tu acceso, cada etapa, un mismo lugar.</h1>
         <p>
           Entrega desde tu celular. Revisa y acompaña equipos desde tu computadora. Las aprobaciones
           hacen avanzar el autómata.
@@ -142,6 +160,13 @@ function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
           </button>
         )}
         <p role="status">{notice || initialNotice}</p>
+        {notice.includes("incorrectos") && (
+          <p className="auth-help">
+            ¿Ya confirmaste tu correo? Si necesitas una contraseña nueva, pulsa «Olvidé mi
+            contraseña», abre el enlace y completa «Guardar contraseña». El enlace por sí solo no
+            cambia tu contraseña.
+          </p>
+        )}
       </form>
     </section>
   );

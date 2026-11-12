@@ -105,3 +105,23 @@ test("recuperación informa el límite de correo sin ocultarlo con un error gen�
   );
   await expect(page.getByRole("status")).toContainText("over_email_send_rate_limit");
 });
+
+test("ingreso presenta identidad, fondo decorativo y formulario sin desbordamiento", async ({
+  page,
+}, testInfo) => {
+  await page.route("https://auth-qa.supabase.co/**", (route) =>
+    route.fulfill({ status: 200, json: {} }),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("navigation", { name: "Navegación principal" })
+    .getByRole("button", { name: "Mi panel", exact: true })
+    .click();
+  await expect(page.locator(".auth-brand > strong")).toHaveText("HackaFlow");
+  await expect(page.getByText("PLATAFORMA DEL EVENTO", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Correo", { exact: true })).toBeEditable();
+  await expect(page.locator(".auth-ambient")).toHaveAttribute("aria-hidden", "true");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("ingreso.png"), fullPage: true });
+});
