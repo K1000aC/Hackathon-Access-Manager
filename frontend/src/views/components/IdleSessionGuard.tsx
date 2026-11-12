@@ -16,12 +16,14 @@ export function IdleSessionGuard() {
   const lastActivity = useRef(0);
   const timer = useRef<number | null>(null);
   const expiring = useRef(false);
+  const resume = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!auth.session || auth.recovery) {
       if (timer.current !== null) window.clearTimeout(timer.current);
       timer.current = null;
       expiring.current = false;
+      resume.current = null;
       setWarning(false);
       setError("");
       return;
@@ -57,19 +59,29 @@ export function IdleSessionGuard() {
         }, remaining - warningDuration);
       }
     };
-    const onActivity = () => {
-      if (Date.now() - lastActivity.current < 1000) return;
+    const resetInactivity = () => {
       lastActivity.current = Date.now();
+      expiring.current = false;
       setError("");
       schedule();
     };
+    const onActivity = (event: Event) => {
+      if (
+        (event.type === "mousemove" || event.type === "scroll") &&
+        Date.now() - lastActivity.current < 1000
+      )
+        return;
+      resetInactivity();
+    };
 
+    resume.current = resetInactivity;
     schedule();
     activityEvents.forEach((event) =>
       document.addEventListener(event, onActivity, { passive: true }),
     );
     return () => {
       clearTimer();
+      resume.current = null;
       activityEvents.forEach((event) => document.removeEventListener(event, onActivity));
     };
   }, [auth.recovery, auth.session?.user.id]);
@@ -92,12 +104,7 @@ export function IdleSessionGuard() {
         {error && <p role="alert">{error}</p>}
         <button
           className="button-primary"
-          onClick={() => {
-            lastActivity.current = Date.now();
-            expiring.current = false;
-            setError("");
-            setWarning(false);
-          }}
+          onClick={() => resume.current?.()}
         >
           Seguir conectado
         </button>
