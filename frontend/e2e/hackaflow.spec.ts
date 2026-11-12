@@ -22,7 +22,7 @@ test("navegación compartida y sidebar desplegable en todas las pantallas", asyn
 });
 test("registro compartido requiere sesión, valida campos y persiste después de recargar", async ({
   page,
-}) => {
+}, testInfo) => {
   await registerTeam(page);
   await page.getByRole("button", { name: "Continuar al seguimiento" }).click();
   await expect(page.getByRole("heading", { name: "Centro de seguimiento" })).toBeVisible();
@@ -33,6 +33,7 @@ test("registro compartido requiere sesión, valida campos y persiste después de
   await navigate(page, "Seguimiento");
   await expect(page.getByRole("heading", { name: "Equipo QA", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Aprobar etapa" })).toHaveCount(0);
+  await page.screenshot({ path: testInfo.outputPath("seguimiento.png"), fullPage: true });
   await navigate(page, "Registro");
   await expect(page.getByRole("heading", { name: "Tu equipo ya está registrado" })).toBeVisible();
 });
