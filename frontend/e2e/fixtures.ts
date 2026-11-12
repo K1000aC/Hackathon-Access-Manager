@@ -31,6 +31,14 @@ export const test = base.extend<{ runtimeErrors: string[]; sharedBackend: void }
           data = { id: user.id, display_name: "Liz QA", email: user.email, role: "student" };
         else if (path === "/rest/v1/event_teams") data = teams;
         else if (path === "/rest/v1/submissions") data = [];
+        else if (path === "/rest/v1/rpc/get_team_roster")
+          data = {
+            leader_id: user.id,
+            advisor_name: "Profesor QA",
+            member_limit: 3,
+            members: [{ id: user.id, name: "Liz QA", email: user.email, leader: true }],
+            requests: [],
+          };
         else if (path === "/rest/v1/rpc/register_event_team") {
           if (teams.length) {
             status = 400;
