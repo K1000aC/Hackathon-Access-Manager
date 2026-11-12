@@ -1,80 +1,42 @@
 # Pruebas de interfaz con Playwright
 
-La suite usa navegadores reales para hacer clic, completar formularios, navegar y comprobar la persistencia después de recargar. Cubre la demo local y el simulador educativo, sin crear usuarios ni escribir en Supabase. Cada prueba tiene un contexto de navegador aislado, sin datos precargados ni credenciales.
-
-## Estructura
-
-```text
-playwright.config.ts                 # Servidor, proyectos y reportes
-frontend/e2e/fixtures.ts             # Navegación, registro y captura de errores JS
-frontend/e2e/hackaflow.spec.ts        # Casos end-to-end y aserciones visuales
-frontend/e2e/tsconfig.json           # Comprobación TypeScript de QA
-playwright-report/                  # Reporte HTML generado, ignorado en Git
-test-results/                       # Evidencias de fallos, ignoradas en Git
-```
-
-## Ejecutar desde la raíz
-
-Con Node.js 24 y las dependencias del proyecto:
+Desde la raíz, con Node 24:
 
 ```sh
 npm install
 npx playwright install chromium firefox webkit
 npm run test:e2e
+npm run test:e2e:report
+npm run test:auth
 ```
 
-La configuración reutiliza Vite en `http://localhost:8443` si ya está ejecutándose; si no, lo inicia y lo detiene al finalizar. No hace falta usar Go Live ni abrir HTML con file://. En CI no se reutiliza un servidor existente. En Linux, puede ser necesario instalar las dependencias del sistema con `npx playwright install --with-deps`.
+`playwright.config.ts` inicia una instancia aislada en el puerto 8445 con una URL de Supabase ficticia; los tests interceptan sus peticiones para probar las pantallas sin crear cuentas, equipos ni correos en producción. No reutiliza el Vite del usuario. Cada prueba tiene un navegador y datos independientes. No se usan credenciales reales.
 
-Para una comprobación rápida en escritorio:
+## Cobertura actual
 
-```sh
-npm run test:e2e -- --project=chromium
-```
+Se ejecutan seis casos en Chromium, Firefox, WebKit, Android emulado e iPhone emulado, para 30 ejecuciones:
 
-Para observar el navegador o usar el modo interactivo:
+1. Navegación y menú lateral desplegable, cierre con Escape y pantallas protegidas que requieren iniciar sesión.
+2. Registro compartido después de iniciar sesión, restauración del equipo desde la API tras recargar y ausencia de escrituras a la antigua clave de equipos en localStorage. Las respuestas de Supabase se simulan en esta suite; las restricciones reales SQL se prueban con `npm test`.
+3. RMP paso a paso, q3 neón, persistencia de la sesión educativa y separación entre simulador y plataforma.
+4. RP ejecutado automáticamente, rechazo qerr, resaltado magenta y reinicio.
+5. Cadena vacía y evento adicional RMPX.
+6. Dashboard, nombres de las creadoras, CTA hacia registro, logo, barra lateral y ausencia de desbordamiento horizontal.
+
+La consola usa el reportero list; el HTML se guarda en playwright-report. Fallos generan capturas, trazas y vídeos en test-results. Ambos directorios están ignorados por Git. La suite usa esperas de aserciones, sin pausas arbitrarias.
 
 ```sh
 npm run test:e2e -- --project=chromium --headed
 npm run test:e2e:ui
-```
-
-Para revisar el reporte y comprobar tipos:
-
-```sh
-npm run test:e2e:report
 npm run typecheck:e2e
 ```
 
-## Cobertura
+## Autenticación
 
-1. Navegación entre inicio, registro local, seguimiento, proyecto y Modelo AFD; presencia de quíntupla y tabla.
-2. Campos obligatorios, registro por formulario, pase q1, almacenamiento y restauración después de recargar; rechazo de nombres duplicados.
-3. Confirmación de mentoría, entrega de enlace, persistencia intermedia y constancia únicamente después de RMP.
-4. Entrada `R M P`, normalización a RMP, pasos q0 → q1 → q2 → q3, doble estado de aceptación, borde magenta, texto blanco y resplandor. Persistencia del simulador sin certificar equipos.
-5. Entrada `R P`, ejecución automática, rechazo qerr, alerta visual magenta, historial y reinicio a q0.
-6. Portada con visión y proyección, registro separado, navegación lateral y ausencia de desbordamiento horizontal.
-7. Cadena vacía con controles deshabilitados y `RMPX`, que no debe aceptarse aunque transite temporalmente por q3.
+`playwright.auth.config.ts` inicia otra instancia aislada en 8444. `npm run test:auth` comprueba recuperación recibida desde el arranque, restauración al recargar, guardado de contraseña, salida y nuevo acceso, enlaces expirados y límites del proveedor de correo. Son tres casos en Chromium y WebKit/iPhone, con Auth simulado y sin capturas o trazas de contraseñas.
 
-Se ejecutan los siete casos en cinco proyectos: Chromium, Firefox, WebKit, Android (Chromium con perfil Pixel 7) e iOS (WebKit con perfil iPhone 13): 35 ejecuciones. Los perfiles móviles simulan pantalla, entrada táctil y agente de usuario; no sustituyen pruebas físicas en teléfonos ni prueban una aplicación nativa.
+## Prueba real
 
-La suite usa aserciones con espera automática, sin pausas fijas. No compara capturas con una referencia visual: comprueba estilos CSS concretos del diseño neón. Las clases se consultan únicamente para estados/estilos; las interacciones usan roles y etiquetas accesibles.
+El flujo de cuentas reales de QA está documentado en docs/qa-live.md. Es opt-in porque escribe en el proyecto compartido. Las pruebas emuladas no sustituyen los dispositivos físicos ni la validación de SMTP, enlaces del correo y roles en Supabase real.
 
-## Reportes y diagnóstico
-
-La consola muestra cada caso con su resultado y un resumen; el comando devuelve un código distinto de cero si falla una prueba. El reporte HTML conserva el detalle por navegador. Ante fallos se guardan capturas, vídeo y trazas en `test-results`. Las excepciones JavaScript no controladas también hacen fallar el caso. Abre la traza desde el reporte HTML para ver las acciones y el DOM de cada paso.
-
-Si necesitas probar otra instancia, puedes indicar una URL explícita. En ese caso Playwright no inicia ningún servidor:
-
-```sh
-E2E_BASE_URL=http://localhost:9000 npm run test:e2e -- --project=chromium
-```
-
-La portada inicial es Inicio: se comprueban el dashboard, el CTA de registro, el logo y la navegación lateral. El contenido de Mi panel puede ser el formulario de acceso o el aviso de configuración pendiente. Esta suite no verifica autenticación, correos, aprobación por asesor ni RLS en una instancia real de Supabase. Las pruebas PostgreSQL y del modelo se ejecutan por separado con `npm test`.
-
-Referencia: [servidor de pruebas](https://playwright.dev/docs/test-webserver), [proyectos y dispositivos](https://playwright.dev/docs/test-projects), [reportes](https://playwright.dev/docs/test-reporters).
-
-## Regresión de acceso y recuperación
-
-`npm run test:auth` inicia una instancia aislada en el puerto 8444 con un proyecto Supabase ficticio. Intercepta las respuestas de Auth y de perfiles sin enviar correos ni alterar cuentas reales. Prueba en Chromium y WebKit/iPhone la recepción del enlace antes de montar Mi panel, la conservación del modo recuperación al recargar, el guardado de contraseña, la salida, el rechazo de la contraseña anterior, el acceso repetido con la nueva y el manejo de enlaces expirados. No guarda trazas ni vídeos de estos formularios.
-
-La suscripción de autenticación ahora se crea al inicializar el cliente, no al entrar al panel. El enlace de recuperación abre el formulario de cambio; después de guardar se cierra la sesión temporal y se solicita entrar con la contraseña nueva. La validación real de correo y contraseña en Supabase sigue siendo necesaria después del despliegue.
+Referencias: https://playwright.dev/docs/test-webserver y https://playwright.dev/docs/test-projects.

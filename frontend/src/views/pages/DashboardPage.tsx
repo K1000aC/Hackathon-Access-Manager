@@ -43,7 +43,7 @@ export function DashboardPage({
           <button className="dashboard-link" onClick={onPanel}>
             Entrar a la plataforma compartida ↗
           </button>
-          <small>El pase local es una demo. Mi panel conecta estudiantes y asesores.</small>
+          <small>Tu cuenta conecta el registro, las entregas y las revisiones del asesor.</small>
         </div>
       </section>
       <section className="dashboard-story">
@@ -84,6 +84,33 @@ export function DashboardPage({
               integrantes y más herramientas de seguimiento. Es nuestra proyección, no una función
               activa todavía.
             </p>
+          </article>
+        </div>
+      </section>
+      <section className="creators-card">
+        <div>
+          <span>EL EQUIPO DETRÁS DE HACKAFLOW</span>
+          <h2>
+            Creado por nosotras.
+            <br />
+            Pensado para construir en equipo.
+          </h2>
+          <p>Diseño y desarrollo del software como proyecto de Teoría de la Computación.</p>
+        </div>
+        <div className="creator-names">
+          <article>
+            <b>CS</b>
+            <div>
+              <h3>Camila Suárez Cruz</h3>
+              <p>Creadora de HackaFlow</p>
+            </div>
+          </article>
+          <article>
+            <b>LC</b>
+            <div>
+              <h3>Lizeth Margarita Crisoto García</h3>
+              <p>Creadora de HackaFlow</p>
+            </div>
           </article>
         </div>
       </section>

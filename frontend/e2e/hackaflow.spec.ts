@@ -1,115 +1,42 @@
 import { test, expect, navigate, registerTeam } from "./fixtures";
-
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
-
-test("navegación: inicio, operación local y vista educativa", async ({ page }) => {
-  await expect(page.getByRole("heading", { name: /ENTRA/ })).toBeVisible();
-  await expect(page).toHaveTitle("HackaFlow | Control de accesos");
-  await expect(page.getByRole("navigation", { name: "Navegación principal" })).toBeVisible();
-  for (const name of ["Mi panel", "Registro local", "Modelo AFD", "Seguimiento local", "Inicio"]) {
-    await expect(
-      page
-        .getByRole("navigation", { name: "Navegación principal" })
-        .getByRole("button", { name, exact: true }),
-    ).toBeVisible();
+test("navegación compartida y sidebar desplegable en todas las pantallas", async ({ page }) => {
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("TRANSFORMA.");
+  await expect(page.getByRole("button", { name: "Abrir menú lateral" })).toBeVisible();
+  await page.getByRole("button", { name: "Abrir menú lateral" }).click();
+  await expect(page.getByRole("dialog", { name: "Menú de navegación" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Abrir menú lateral" })).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+  for (const name of ["Mi panel", "Registro", "Seguimiento"]) {
+    await navigate(page, name);
+    await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toBeVisible();
   }
-  await navigate(page, "Registro local");
-  await expect(page.getByRole("heading", { name: "Registra tu equipo" })).toBeVisible();
   await navigate(page, "Modelo AFD");
   await expect(page.getByRole("heading", { name: "Simulador de acceso" })).toBeVisible();
-  await expect(page.getByRole("table")).toBeVisible();
   await expect(page.getByRole("table").getByRole("row")).toHaveCount(6);
-  await expect(page.getByText("M = (Q, Σ, δ, q₀, F)", { exact: true })).toBeVisible();
-  await navigate(page, "Seguimiento local");
-  await expect(page.getByRole("heading", { name: "Equipos y seguimiento" })).toBeVisible();
-  await navigate(page, "Inicio");
-  await expect(page.getByRole("heading", { name: "Un recorrido claro" })).toBeVisible();
-  await navigate(page, "Mi panel");
-  await expect(
-    page
-      .getByRole("navigation", { name: "Navegación principal" })
-      .getByRole("button", { name: "Mi panel" }),
-  ).toHaveClass("active");
-  await expect(page.locator("main")).not.toBeEmpty();
 });
-
-test("registro: campos obligatorios, persistencia al recargar y duplicados", async ({ page }) => {
-  await navigate(page, "Registro local");
-  await page.getByRole("button", { name: "Guardar registro", exact: true }).click();
-  await expect(page.getByLabel("Nombre del equipo", { exact: true })).toBeFocused();
+test("registro compartido requiere sesión, valida campos y persiste después de recargar", async ({
+  page,
+}, testInfo) => {
+  await registerTeam(page);
+  await page.getByRole("button", { name: "Continuar al seguimiento" }).click();
+  await expect(page.getByRole("heading", { name: "Centro de seguimiento" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Equipo QA", exact: true })).toBeVisible();
+  await expect(page.getByText("Pendiente de asignación de asesor", { exact: false })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("hackaflow.teams.v2"))).toBeNull();
-  await registerTeam(page);
-  await expect(page.locator(".access-pass")).toContainText("REGISTRADO · q1");
-  await page.getByRole("button", { name: "Continuar con mentoría y prototipo" }).click();
-  await expect(page.locator(".team-detail")).toContainText("Estado q1 · Cadena R");
   await page.reload();
-  await navigate(page, "Seguimiento local");
-  await expect(
-    page.getByRole("heading", { name: "Equipo QA", exact: true, level: 2 }),
-  ).toBeVisible();
-  await expect(page.locator(".team-timeline li")).toHaveCount(1);
-  const teams = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("hackaflow.teams.v2") || "[]"),
-  );
-  expect(teams).toHaveLength(1);
-  expect(teams[0]).toMatchObject({
-    teamName: "Equipo QA",
-    leader: "Liz QA",
-    email: "qa@example.com",
-    members: "4",
-    category: "Tecnología educativa",
-    events: [{ symbol: "R" }],
-  });
-  await navigate(page, "Registro local");
-  await page.getByLabel("Nombre del equipo", { exact: true }).fill(" Equipo QA ");
-  await page.getByLabel("Líder del equipo", { exact: true }).fill("Otra persona");
-  await page.getByLabel("Correo de contacto", { exact: true }).fill("otro@example.com");
-  await page.getByRole("checkbox", { name: /Acepto el reglamento/ }).check();
-  await page.getByRole("button", { name: "Guardar registro", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("Ya existe un equipo");
+  await navigate(page, "Seguimiento");
+  await expect(page.getByRole("heading", { name: "Equipo QA", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Aprobar etapa" })).toHaveCount(0);
+  await page.screenshot({ path: testInfo.outputPath("seguimiento.png"), fullPage: true });
+  await navigate(page, "Registro");
+  await expect(page.getByRole("heading", { name: "Tu equipo ya está registrado" })).toBeVisible();
 });
-
-test("seguimiento: mentoría, prototipo y constancia únicamente tras RMP", async ({ page }) => {
-  await registerTeam(page);
-  await page.getByRole("button", { name: "Continuar con mentoría y prototipo" }).click();
-  await expect(page.getByRole("button", { name: "Guardar mentoría (M)" })).toBeDisabled();
-  await expect(page.locator(".certificate")).toHaveCount(0);
-  await page.getByLabel("Mentor o sesión realizada").fill("Mentoría de arquitectura con Liz");
-  await page
-    .getByRole("checkbox", { name: "Confirmo que el equipo asistió a la mentoría." })
-    .check();
-  await page.getByRole("button", { name: "Guardar mentoría (M)" }).click();
-  await expect(page.locator(".team-detail")).toContainText("Estado q2 · Cadena RM");
-  await expect(page.locator(".certificate")).toHaveCount(0);
-  await page.reload();
-  await navigate(page, "Seguimiento local");
-  await expect(page.locator(".team-detail")).toContainText("Estado q2 · Cadena RM");
-  await page
-    .getByLabel("Enlace al repositorio o prototipo")
-    .fill("https://example.com/prototipo-qa");
-  await page
-    .getByRole("checkbox", {
-      name: "Confirmo que este enlace corresponde a la entrega del equipo.",
-    })
-    .check();
-  await page.getByRole("button", { name: "Guardar entrega y certificar (P)" }).click();
-  await expect(page.getByRole("region", { name: "Certificación del proyecto" })).toContainText(
-    "ACEPTADO",
-  );
-  await expect(page.locator(".team-timeline li")).toHaveCount(3);
-  await expect(page.getByRole("link", { name: "Abrir prototipo entregado" })).toHaveAttribute(
-    "href",
-    "https://example.com/prototipo-qa",
-  );
-  await page.reload();
-  await navigate(page, "Seguimiento local");
-  await expect(page.locator(".team-detail")).toContainText("Estado q3 · Cadena RMP");
-  await page.getByRole("combobox", { name: /^Mostrar/ }).selectOption("aceptados");
-  await expect(page.locator(".team-list button")).toHaveCount(1);
-});
-
 test("AFD válido: R M P paso a paso, estilos neón y sesión persistente", async ({ page }) => {
   await navigate(page, "Modelo AFD");
   await page.getByLabel("Cadena de eventos", { exact: true }).fill("R M P");
@@ -130,8 +57,8 @@ test("AFD válido: R M P paso a paso, estilos neón y sesión persistente", asyn
   );
   await expect(page.getByTestId("simulation-result")).toHaveClass(/accepted/);
   await expect(page.getByRole("button", { name: "Paso", exact: true })).toBeDisabled();
-  await navigate(page, "Seguimiento local");
-  await expect(page.getByText("Registra un equipo para comenzar su seguimiento.")).toBeVisible();
+  await navigate(page, "Seguimiento");
+  await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toBeVisible();
   await navigate(page, "Modelo AFD");
   await expect(page.getByTestId("state-q3")).toHaveClass(/active/);
   await page.reload();
@@ -191,6 +118,10 @@ test("dashboard: registro separado, logo, navegación lateral y sin desbordamien
     true,
   );
   await page.screenshot({ path: testInfo.outputPath("dashboard.png"), fullPage: true });
+  await expect(page.getByRole("heading", { name: "Camila Suárez Cruz" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Lizeth Margarita Crisoto García" }),
+  ).toBeVisible();
   const toggle = page.getByRole("button", { name: "Abrir menú lateral" });
   if (await toggle.isVisible()) await toggle.click();
   const lateral = page.getByRole("navigation", { name: "Navegación lateral" });
@@ -199,6 +130,6 @@ test("dashboard: registro separado, logo, navegación lateral y sin desbordamien
   await expect(page.getByRole("heading", { name: "Simulador de acceso" })).toBeVisible();
   await navigate(page, "Inicio");
   await page.getByRole("button", { name: "Registrar mi equipo", exact: false }).click();
-  await expect(page.getByRole("heading", { name: "Registra tu equipo" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: /ENTRA/ })).toHaveCount(0);
 });
