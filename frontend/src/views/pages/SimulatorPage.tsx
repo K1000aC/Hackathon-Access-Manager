@@ -1,13 +1,9 @@
-import { useState } from "react";
 import { states } from "../../model/automaton";
-import type { TeamPass } from "../../model/team";
-import { saveAcceptedTeam } from "../../controller/teamController";
 import { useAutomatonController } from "../../controller/useAutomatonController";
 import { icons } from "../components/icons";
 import { FormalCard } from "../components/FormalCard";
 import { AutomatonDiagram } from "../components/AutomatonDiagram";
-export function SimulatorPage({ team }: { team: TeamPass | null }) {
-  const [notice, setNotice] = useState("");
+export function SimulatorPage() {
   const automaton = useAutomatonController();
   const activeStep = automaton.cursor ? automaton.steps[automaton.cursor - 1] : undefined;
 
@@ -24,8 +20,8 @@ export function SimulatorPage({ team }: { team: TeamPass | null }) {
             <em>sin estados ambiguos.</em>
           </h1>
           <p>
-            Simula y valida el recorrido de cada equipo durante una hackatón mediante un Autómata
-            Finito Determinista.
+            Prueba cadenas en modo educativo. Estas pruebas no modifican equipos ni certificaciones.
+            Explora un Autómata Finito Determinista.
           </p>
         </div>
         <div className="hero-stat">
@@ -51,6 +47,7 @@ export function SimulatorPage({ team }: { team: TeamPass | null }) {
             </div>
           </div>
 
+          <p role="alert">{automaton.storageError}</p>
           <label htmlFor="sequence">Cadena de eventos</label>
           <div className="input-wrap">
             <span className="prompt">&gt;</span>
@@ -158,32 +155,6 @@ export function SimulatorPage({ team }: { team: TeamPass | null }) {
         </section>
       </div>
 
-      <section className="history-card">
-        <h2>Validación del equipo</h2>
-        <p>
-          {team
-            ? `Equipo seleccionado: ${team.teamName}`
-            : "Registra un equipo en Acreditación para guardar su historial."}
-        </p>
-        <button
-          className="button-primary"
-          disabled={!team || !automaton.accepted}
-          onClick={() => {
-            if (!team) return;
-            try {
-              saveAcceptedTeam(team, automaton.input);
-              setNotice("Equipo e historial aceptado guardados en la base local.");
-            } catch {
-              setNotice(
-                "No se pudo guardar. Comprueba que el almacenamiento del navegador esté disponible.",
-              );
-            }
-          }}
-        >
-          Guardar equipo aceptado (q3)
-        </button>
-        <p role="status">{notice}</p>
-      </section>
       <section className="diagram-card">
         <div className="card-heading">
           <div>

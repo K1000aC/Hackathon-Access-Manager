@@ -1,15 +1,19 @@
 import { useState, type FormEvent } from "react";
 import type { TeamPass } from "../../model/team";
+import { registerTeam } from "../../controller/teamController";
 import { icons } from "../components/icons";
 import { AccessPass } from "../components/AccessPass";
 import { MaximalBackground } from "../components/MaximalBackground";
 export function RegistrationPage({
   onAutomaton,
+  onTeams,
   onRegister,
 }: {
   onAutomaton: () => void;
+  onTeams: () => void;
   onRegister: (team: TeamPass) => void;
 }) {
+  const [error, setError] = useState("");
   const [pass, setPass] = useState<TeamPass | null>(null);
   const [form, setForm] = useState({
     teamName: "",
@@ -26,8 +30,18 @@ export function RegistrationPage({
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const team = { ...form, id: `HF-${crypto.randomUUID()}` };
-    setPass(team);
-    onRegister(team);
+    try {
+      registerTeam(team);
+      setPass(team);
+      onRegister(team);
+      setError("");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar el registro. Comprueba el almacenamiento del navegador.",
+      );
+    }
   };
 
   return (
@@ -52,8 +66,8 @@ export function RegistrationPage({
           </h1>
           <div className="title-sticker">PASE DE EQUIPO</div>
           <p>
-            Registra a tu equipo y genera la acreditación digital para acceder a todas las etapas
-            del evento.
+            Registra a tu equipo y guarda su pase de registro. Después confirma la mentoría y
+            entrega el prototipo para obtener la certificación final.
           </p>
           <div className="event-meta">
             <div>
@@ -78,10 +92,11 @@ export function RegistrationPage({
               <div className="registration-heading">
                 <span>{icons.ticket}</span>
                 <div>
-                  <p>NUEVA ACREDITACIÓN</p>
+                  <p>NUEVO REGISTRO</p>
                   <h2>Registra tu equipo</h2>
                 </div>
               </div>
+              <p role="alert">{error}</p>
               <form onSubmit={submit}>
                 <label>
                   Nombre del equipo
@@ -142,7 +157,7 @@ export function RegistrationPage({
                   <span>Acepto el reglamento y autorizo el registro del equipo.</span>
                 </label>
                 <button className="generate-pass" type="submit">
-                  Generar pase de acceso {icons.arrow}
+                  Guardar registro {icons.arrow}
                 </button>
               </form>
               <div className="secure-note">
@@ -153,8 +168,12 @@ export function RegistrationPage({
             <div className="pass-success">
               <div className="success-mark">{icons.check}</div>
               <p>REGISTRO COMPLETADO</p>
-              <h2>Tu equipo está dentro.</h2>
+              <h2>Registro guardado.</h2>
               <AccessPass pass={pass} />
+              <button className="button-primary" type="button" onClick={onTeams}>
+                Continuar con mentoría y prototipo
+              </button>
+              <p>Estado q1: faltan la mentoría y el prototipo para certificar el proyecto.</p>
               <div className="pass-actions">
                 <button onClick={() => window.print()} type="button">
                   Descargar / imprimir

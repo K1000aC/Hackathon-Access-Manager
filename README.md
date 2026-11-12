@@ -27,12 +27,21 @@ El servidor de desarrollo usa el puerto indicado por `PORT` o 8443. `npm run bui
 - `frontend/src/styles`: estilos globales y paleta del producto.
 - `frontend/public`: recursos estáticos.
 - `frontend/tests`: pruebas del dominio.
-- `backend`: estructura reservada para una futura API; consulta su README.
+- `backend`: migraciones PostgreSQL y permisos de la plataforma compartida; consulta su README.
 - `docs`: arquitectura y decisiones del proyecto.
 
-## Demostración
+## Plataforma compartida
 
-Acreditación → registrar equipo → Modelo AFD → ejecutar `RMP` → guardar equipo aceptado → Equipos aceptados. El almacenamiento usa `localStorage`, persiste al recargar y se sincroniza entre pestañas del mismo origen. No hay base de datos remota ni sincronización entre dispositivos. Los registros existentes se conservan si el sitio mantiene el mismo origen.
+Mi panel incorpora cuentas de estudiante, asesor y organizador, envíos a revisión, observaciones, asignación de equipos y certificación tras aprobación. Requiere activar Supabase siguiendo `backend/README.md`. Sin esa configuración se puede seguir usando la demo local. Consulta `docs/platform.md` para el alcance y la compatibilidad móvil.
+
+## Demostración local
+
+Registro → guardar equipo → Equipos y seguimiento → seleccionar equipo → confirmar mentoría indicando sesión o mentor → entregar enlace HTTP/HTTPS al prototipo → certificación en q3. Los equipos pendientes, eventos y fechas se guardan desde el registro. La constancia final se puede imprimir o guardar como PDF desde el diálogo de impresión.
+
+La mentoría y la entrega se confirman manualmente para la demo; no se comprueba asistencia externa ni contenido del repositorio. El simulador de Modelo AFD es educativo e independiente: sus cadenas no certifican equipos. Conserva la entrada, el progreso y las últimas 20 pruebas; al regresar se retoma pausado.
+
+El almacenamiento usa `localStorage`, persiste al recargar y sincroniza equipos entre pestañas del mismo origen. No hay base de datos remota ni sincronización entre dispositivos. Los equipos aceptados en la versión anterior se conservan como registros importados sin evidencias. El pase de registro corresponde a q1; la constancia final solo aparece al completar RMP en q3.
+
 
 ## Despliegue
 

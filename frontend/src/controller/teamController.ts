@@ -1,11 +1,26 @@
 import { useEffect, useState } from "react";
-import { listAcceptedTeams } from "../infrastructure/storage/teamRepository";
-export { saveAcceptedTeam } from "../infrastructure/storage/teamRepository";
-
-export function useAcceptedTeams() {
-  const [teams, setTeams] = useState(listAcceptedTeams);
+import { listTeams } from "../infrastructure/storage/teamRepository";
+export { registerTeam, recordEvent } from "../infrastructure/storage/teamRepository";
+export function useTeams() {
+  const [error, setError] = useState("");
+  const read = () => {
+    try {
+      return listTeams();
+    } catch {
+      return [];
+    }
+  };
+  const [teams, setTeams] = useState(read);
   useEffect(() => {
-    const refresh = () => setTeams(listAcceptedTeams());
+    const refresh = () => {
+      try {
+        setTeams(listTeams());
+        setError("");
+      } catch {
+        setError("No se pudo leer el almacenamiento local. Comprueba los permisos del navegador.");
+      }
+    };
+    refresh();
     window.addEventListener("storage", refresh);
     window.addEventListener("hackaflow:teams", refresh);
     return () => {
@@ -13,5 +28,5 @@ export function useAcceptedTeams() {
       window.removeEventListener("hackaflow:teams", refresh);
     };
   }, []);
-  return teams;
+  return { teams, error };
 }
