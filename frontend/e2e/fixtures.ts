@@ -99,6 +99,6 @@ export async function registerTeam(page: Page, teamName = "Equipo QA") {
     .selectOption("Tecnología educativa");
   await page.getByRole("combobox", { name: "Integrantes", exact: true }).selectOption("4");
   await page.getByLabel("Acepto el reglamento", { exact: false }).check();
-  await page.getByRole("button", { name: "Guardar registro", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Tu equipo ya está registrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Generar acceso", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Tu equipo ya tiene acceso" })).toBeVisible();
 }

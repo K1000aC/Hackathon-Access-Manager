@@ -54,7 +54,23 @@ test("permisos y flujo compartido en PostgreSQL", async (t) => {
     await rpc("set_user_role", [ids.advisor, "advisor"]);
     await rpc("set_user_role", [ids.stranger, "advisor"]);
     await login("student");
+    await t.test("registro rechaza datos inválidos sin crear equipos", async () => {
+      await assert.rejects(rpc("register_event_team", ["   ", "Social", 3]));
+      await assert.rejects(rpc("register_event_team", ["Binary", "Social", 0]));
+      await assert.rejects(rpc("register_event_team", ["Binary", "Social", 11]));
+      assert.equal((await db.query("select * from public.event_teams")).rows.length, 0);
+    });
     const team = (await rpc("register_event_team", ["Binary", "Demo", 3])).rows[0].result;
+    await t.test("registro crea un único acceso R y bloquea duplicados", async () => {
+      const row = (await db.query("select * from public.event_teams")).rows[0];
+      assert.equal(row.owner_id, ids.student);
+      assert.equal(row.chain, "R");
+      assert.equal(row.events.length, 1);
+      assert.equal(row.events[0].symbol, "R");
+      await assert.rejects(rpc("register_event_team", ["Segundo", "Social", 3]));
+      assert.equal((await db.query("select * from public.event_teams")).rows.length, 1);
+    });
+
     await t.test("un alumno no ve ni modifica equipos ajenos", async () => {
       await login("other");
       assert.equal((await db.query("select * from public.event_teams")).rows.length, 0);

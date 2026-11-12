@@ -153,7 +153,6 @@ export default function App() {
           </button>
         )}
         <div className="sidebar-intro">
-          <span>WORKSPACE / 2025</span>
           <h2>
             Construye tu
             <br />
