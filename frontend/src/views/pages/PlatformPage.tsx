@@ -5,6 +5,7 @@ import { usePlatform } from "../../controller/usePlatform";
 import {
   nextStage,
   roleNames,
+  roleSourceNames,
   stageNames,
   statusNames,
   type EventTeam,
@@ -89,6 +90,12 @@ function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
         <h2>{signup ? "Crear cuenta" : "Iniciar sesión"}</h2>
         {signup && (
           <label>
+            Tipo de usuario
+            <input value="Estudiante" readOnly aria-describedby="signup-type-help" />
+          </label>
+        )}
+        {signup && (
+          <label>
             Nombre
             <input name="name" required maxLength={120} autoComplete="name" />
           </label>
@@ -129,7 +136,13 @@ function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
         >
           {signup ? "Ya tengo cuenta" : "Crear una cuenta"}
         </button>
-        {signup && <p>El organizador asignará el rol de asesor a las cuentas correspondientes.</p>}
+        {signup && (
+          <p id="signup-type-help">
+            El registro público crea únicamente cuentas de estudiante. Las cuentas de asesores y
+            organizadores las gestiona la organización del evento o el administrador de la
+            plataforma.
+          </p>
+        )}
         {!signup && (
           <button
             type="button"
@@ -679,7 +692,8 @@ function RoleManager({
             <tr>
               <th>Usuario</th>
               <th>Contacto</th>
-              <th>Rol</th>
+              <th>Tipo de usuario</th>
+              <th>Asignación del tipo</th>
               <th>Acción</th>
             </tr>
           </thead>
@@ -692,6 +706,7 @@ function RoleManager({
                 </td>
                 <td>{person.email}</td>
                 <td>
+                  <span className={`user-type-badge ${person.role}`}>{roleNames[person.role]}</span>
                   <select
                     aria-label={`Rol de ${person.display_name}`}
                     disabled={person.id === profile.id || !!busy}
@@ -704,6 +719,16 @@ function RoleManager({
                       </option>
                     ))}
                   </select>
+                </td>
+                <td>
+                  <span>{roleSourceNames[person.role_source ?? "legacy"]}</span>
+                  {person.role_assigned_by && (
+                    <small>
+                      Por{" "}
+                      {people.find((p) => p.id === person.role_assigned_by)?.display_name ??
+                        "organización"}
+                    </small>
+                  )}
                 </td>
                 <td>
                   <button

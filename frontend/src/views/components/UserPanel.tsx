@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import type { EventTeam, Profile, Submission } from "../../model/platform";
-import { roleNames } from "../../model/platform";
+import { roleNames, roleSourceNames } from "../../model/platform";
 import { WorkBoard } from "./WorkBoard";
 export function UserPanel({
   profile,
@@ -84,7 +84,11 @@ export function UserPanel({
       </div>
       <div className="portal-heading panel-welcome">
         <div>
-          <p>{roleNames[profile.role]}</p>
+          <p>
+            Tipo de usuario:{" "}
+            <span className={`user-type-badge ${profile.role}`}>{roleNames[profile.role]}</span>
+          </p>
+          <p>Asignación: {roleSourceNames[profile.role_source ?? "legacy"]}</p>
           <h1>Hola, {profile.display_name}</h1>
           <p>
             {student
@@ -165,7 +169,13 @@ export function UserPanel({
                 <h2>Mi cuenta</h2>
                 <p>{profile.display_name}</p>
                 <p>{profile.email}</p>
-                <p>{roleNames[profile.role]}</p>
+                <p>
+                  Tipo de usuario:{" "}
+                  <span className={`user-type-badge ${profile.role}`}>
+                    {roleNames[profile.role]}
+                  </span>
+                </p>
+                <p>Asignación: {roleSourceNames[profile.role_source ?? "legacy"]}</p>
               </div>
             </div>
             {profile.role === "organizer" && roles}

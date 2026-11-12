@@ -129,13 +129,11 @@ test("estudiante: equipo, backlog con archivo y sprint compartidos, sin controle
   await page
     .getByLabel("Descripción y objetivos", { exact: true })
     .fill("Definir las historias de usuario prioritarias.");
-  await page
-    .getByLabel("Adjuntar archivo (opcional)", { exact: true })
-    .setInputFiles({
-      name: "backlog.txt",
-      mimeType: "text/plain",
-      buffer: Buffer.from("Historia 1"),
-    });
+  await page.getByLabel("Adjuntar archivo (opcional)", { exact: true }).setInputFiles({
+    name: "backlog.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("Historia 1"),
+  });
   await page.getByRole("button", { name: "Enviar trabajo a revisión", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Historias de usuario", exact: true }),
@@ -162,4 +160,19 @@ test("asesor: revisa un sprint con observaciones desde su panel", async ({ page 
   expect(calls).toContain("review");
   await page.getByRole("tab", { name: "Mi perfil", exact: true }).click();
   await expect(page.getByText("Administrar usuarios y roles", { exact: false })).toHaveCount(0);
+});
+
+test("registro público muestra únicamente estudiante como tipo de usuario", async ({ page }) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation", { name: "Navegación principal" })
+    .getByRole("button", { name: "Mi panel", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Crear una cuenta", exact: true }).click();
+  await expect(page.getByLabel("Tipo de usuario", { exact: true })).toHaveValue("Estudiante");
+  await expect(page.getByLabel("Tipo de usuario", { exact: true })).not.toBeEditable();
+  await expect(page.getByRole("combobox")).toHaveCount(0);
+  await expect(
+    page.getByText("El registro público crea únicamente cuentas de estudiante.", { exact: false }),
+  ).toBeVisible();
 });
