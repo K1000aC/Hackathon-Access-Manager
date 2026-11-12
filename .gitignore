@@ -27,4 +27,5 @@ logs/
 /blob-report/
 
 # Accesos privados generados para QA
+/backend/.env.qa.local
 /backend/.local/
