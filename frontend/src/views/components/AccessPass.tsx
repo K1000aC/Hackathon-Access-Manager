@@ -20,11 +20,11 @@ export function AccessPass({ pass }: { pass: TeamPass }) {
     <article className="access-pass">
       <div className="pass-topline">
         <span>HACKAFLOW / ACCESS PASS</span>
-        <b>VALIDADO</b>
+        <b>REGISTRADO · q1</b>
       </div>
       <div className="pass-content">
         <div>
-          <small>EQUIPO ACREDITADO</small>
+          <small>PASE DE REGISTRO</small>
           <h3>{pass.teamName}</h3>
           <p>{pass.leader}</p>
           <div className="pass-data">

@@ -1,19 +1,18 @@
+import { PlatformPage } from "../views/pages/PlatformPage";
 import { useState } from "react";
-import type { TeamPass } from "../model/team";
 import { RegistrationPage } from "../views/pages/RegistrationPage";
 import { SimulatorPage } from "../views/pages/SimulatorPage";
 import { InfoPage } from "../views/pages/InfoPage";
 import { TeamsPage } from "../views/pages/TeamsPage";
-type Section = "registro" | "automata" | "proyecto" | "equipos";
+type Section = "plataforma" | "registro" | "automata" | "proyecto" | "equipos";
 
 export default function App() {
-  const [team, setTeam] = useState<TeamPass | null>(null);
-  const [section, setSection] = useState<Section>("registro");
+  const [section, setSection] = useState<Section>("plataforma");
 
   return (
     <div className="app-shell">
       <header>
-        <button className="brand" onClick={() => setSection("registro")} type="button">
+        <button className="brand" onClick={() => setSection("plataforma")} type="button">
           <span className="brand-mark">
             H<span>F</span>
           </span>
@@ -24,9 +23,10 @@ export default function App() {
         </button>
         <nav aria-label="Navegación principal">
           {[
-            ["registro", "Acreditación"],
+            ["plataforma", "Mi panel"],
+            ["registro", "Registro local"],
             ["automata", "Modelo AFD"],
-            ["equipos", "Equipos aceptados"],
+            ["equipos", "Seguimiento local"],
             ["proyecto", "El proyecto"],
           ].map(([id, label]) => (
             <button
@@ -45,10 +45,26 @@ export default function App() {
       </header>
 
       <main>
-        {section === "registro" && (
-          <RegistrationPage onRegister={setTeam} onAutomaton={() => setSection("automata")} />
+        {section === "plataforma" && <PlatformPage />}
+        {(section === "registro" || section === "equipos") && (
+          <p className="demo-notice">
+            DEMO LOCAL · Estos registros no son cuentas ni equipos de la plataforma compartida.
+          </p>
         )}
-        {section === "automata" && <SimulatorPage team={team} />}
+        {section === "registro" && (
+          <RegistrationPage
+            onTeams={() => setSection("equipos")}
+            onRegister={(team) => {
+              try {
+                localStorage.setItem("hackaflow.selectedTeam", team.id);
+              } catch {
+                /* El registro ya está guardado. */
+              }
+            }}
+            onAutomaton={() => setSection("automata")}
+          />
+        )}
+        {section === "automata" && <SimulatorPage />}
         {section === "equipos" && <TeamsPage />}
         {section === "proyecto" && <InfoPage section="proyecto" />}
       </main>

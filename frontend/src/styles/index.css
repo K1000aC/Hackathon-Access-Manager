@@ -2003,3 +2003,282 @@ footer small {
   background: #1a0033;
   overflow-wrap: anywhere;
 }
+
+.team-workspace {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  gap: 28px;
+  margin-top: 24px;
+}
+.team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.team-list button {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  padding: 16px;
+  border: 1px solid #7b1fa2;
+  background: #1a0033;
+  overflow-wrap: anywhere;
+}
+.team-list button[aria-pressed="true"] {
+  border-color: #c2185b;
+  box-shadow: 0 0 16px #7b1fa2;
+}
+.team-detail {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.team-detail > p {
+  margin: 12px 0;
+}
+.team-action {
+  display: grid;
+  gap: 16px;
+  padding: 24px 0;
+}
+.team-action label {
+  display: block;
+}
+.team-action input:not([type="checkbox"]),
+.history-card select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid #7b1fa2;
+  background: #2b054e;
+  color: #ffffff;
+}
+.team-action input[type="checkbox"] {
+  accent-color: #c2185b;
+}
+.team-timeline {
+  padding-left: 24px;
+}
+.team-timeline li {
+  padding: 12px;
+  border-left: 2px solid #7b1fa2;
+}
+.certificate {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 28px;
+  border: 2px solid #c2185b;
+  background: #1a0033;
+}
+.certificate a {
+  text-decoration: underline;
+}
+@media (max-width: 700px) {
+  .team-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .certificate,
+  .certificate *,
+  .access-pass,
+  .access-pass * {
+    visibility: visible;
+  }
+  .certificate,
+  .access-pass {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    color: #ffffff;
+    print-color-adjust: exact;
+  }
+  .certificate button {
+    display: none;
+  }
+}
+
+.portal-auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 460px);
+  gap: 48px;
+  align-items: center;
+}
+.portal-auth h1,
+.portal-heading h1 {
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.15;
+  margin: 12px 0 20px;
+}
+.portal-auth ul {
+  padding: 24px;
+  line-height: 2;
+}
+.portal-form {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.portal-form label,
+.portal label {
+  display: grid;
+  gap: 8px;
+}
+.portal input,
+.portal select,
+.portal textarea,
+.portal-auth input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #7b1fa2;
+  border-radius: 8px;
+  background: #2b054e;
+  color: #ffffff;
+  font-size: 16px;
+  min-height: 48px;
+}
+.portal textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.portal button,
+.portal-auth button {
+  min-height: 48px;
+  white-space: normal;
+}
+.portal,
+.portal-team {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.portal-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.portal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.portal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.portal-stats > div {
+  display: grid;
+  gap: 10px;
+  padding: 24px;
+  border: 1px solid #7b1fa2;
+  border-radius: 12px;
+  background: #1a0033;
+}
+.portal-stats strong {
+  font-size: 32px;
+}
+.portal-stages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.portal-stages > div {
+  display: grid;
+  gap: 8px;
+  padding: 16px 10px;
+  border: 1px solid #7b1fa2;
+  border-radius: 10px;
+  text-align: center;
+}
+.portal-stages .done {
+  background: linear-gradient(135deg, #7b1fa2, #c2185b);
+}
+.portal-submission {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid #7b1fa2;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.portal-submission a {
+  text-decoration: underline;
+}
+.portal details summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 10px 0;
+}
+.portal details ol {
+  padding: 20px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.portal-pending,
+.demo-notice {
+  padding: 16px;
+  border: 1px solid #c2185b;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.portal-people {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+.portal-people label {
+  padding: 18px;
+  border: 1px solid #7b1fa2;
+  overflow-wrap: anywhere;
+}
+.portal .team-workspace {
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .portal-auth {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .portal .team-workspace {
+    grid-template-columns: 1fr;
+  }
+  .portal-stats {
+    gap: 8px;
+  }
+  .portal-stats > div {
+    padding: 14px 10px;
+  }
+  .portal-stats span {
+    font-size: 12px;
+  }
+  .portal-team {
+    padding: 20px;
+  }
+  .portal-actions {
+    width: 100%;
+  }
+  .portal-actions button {
+    flex: 1;
+  }
+  .portal-stages span,
+  .portal-stages small {
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

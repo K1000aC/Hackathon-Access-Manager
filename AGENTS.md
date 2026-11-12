@@ -13,8 +13,9 @@ Aplicación React + TypeScript + Vite + Tailwind CSS v4.
 - `frontend/src/infrastructure/storage`: persistencia local.
 - `frontend/src/styles/index.css`: estilos globales.
 - `frontend/tests`: pruebas.
-- `backend`: estructura para una API futura, sin servidor activo.
+- `backend`: backend Supabase con migraciones PostgreSQL y permisos RLS.
 - `docs/architecture.md`: decisiones de arquitectura.
+- `docs/platform.md`: roles, flujo compartido y compatibilidad.
 
 ## Comandos desde la raíz
 

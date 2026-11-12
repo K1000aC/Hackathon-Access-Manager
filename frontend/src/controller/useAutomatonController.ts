@@ -9,11 +9,51 @@ export interface HistoryEntry {
   time: string;
 }
 
+function loadSession(): { input: string; cursor: number; history: HistoryEntry[] } {
+  try {
+    const data = JSON.parse(localStorage.getItem("hackaflow.simulator.v1") ?? "null");
+    if (
+      data &&
+      typeof data.input === "string" &&
+      Number.isInteger(data.cursor) &&
+      data.cursor >= 0 &&
+      data.cursor <= data.input.length &&
+      Array.isArray(data.history)
+    ) {
+      return {
+        input: data.input.slice(0, 12),
+        cursor: Math.min(data.cursor, 12),
+        history: data.history
+          .filter(
+            (item: HistoryEntry) =>
+              item &&
+              typeof item.input === "string" &&
+              typeof item.time === "string" &&
+              item.finalState in states,
+          )
+          .slice(0, 20),
+      };
+    }
+  } catch {
+    /* Una sesión inválida no impide utilizar el simulador. */
+  }
+  return { input: "RMP", cursor: 0, history: [] };
+}
 export function useAutomatonController() {
-  const [input, setInputValue] = useState("RMP");
-  const [cursor, setCursor] = useState(0);
+  const [initial] = useState(loadSession);
+  const [input, setInputValue] = useState(initial.input);
+  const [cursor, setCursor] = useState(initial.cursor);
   const [isRunning, setIsRunning] = useState(false);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [history, setHistory] = useState<HistoryEntry[]>(initial.history);
+  const [storageError, setStorageError] = useState("");
+  useEffect(() => {
+    try {
+      localStorage.setItem("hackaflow.simulator.v1", JSON.stringify({ input, cursor, history }));
+      setStorageError("");
+    } catch {
+      setStorageError("No se pudo guardar la sesión del simulador en este navegador.");
+    }
+  }, [input, cursor, history]);
 
   const steps = useMemo(() => processInput(input), [input]);
   const currentState = stateAfter(input, cursor);
@@ -69,11 +109,12 @@ export function useAutomatonController() {
           }).format(new Date()),
         },
         ...items,
-      ].slice(0, 4);
+      ].slice(0, 20);
     });
   }, [accepted, currentState, input, isComplete]);
 
   return {
+    storageError,
     input,
     setInput,
     cursor,
