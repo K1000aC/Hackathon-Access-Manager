@@ -5,6 +5,12 @@ export const cloudConfigured = Boolean(url && key);
 const hash = new URLSearchParams(window.location.hash.slice(1));
 const query = new URLSearchParams(window.location.search);
 const recoveryKey = "hackaflow.passwordRecovery";
+const authTabKey = "hackaflow.authTabId";
+let authTabId = sessionStorage.getItem(authTabKey);
+if (!authTabId) {
+  authTabId = crypto.randomUUID();
+  sessionStorage.setItem(authTabKey, authTabId);
+}
 const recoveryInURL = hash.get("type") === "recovery" || query.get("flow") === "recovery";
 function pendingRecovery() {
   try {
@@ -66,6 +72,7 @@ export function finishRecovery() {
 export const cloud = cloudConfigured
   ? createClient(url, key, {
       auth: {
+        storageKey: `hackaflow-${authTabId}-auth-token`,
         storage: window.sessionStorage,
         persistSession: true,
         autoRefreshToken: true,
