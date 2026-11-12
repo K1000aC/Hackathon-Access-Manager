@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cloud } from "../../infrastructure/cloud/client";
 import type { EventTeam, Profile } from "../../model/platform";
 type Roster = {
@@ -22,6 +22,10 @@ export function TeamMembers({ team, profile }: { team: EventTeam; profile: Profi
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
   const leader = team.owner_id === profile.id;
+  const confirmationRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (notice && leader) confirmationRef.current?.scrollIntoView({ block: "nearest" });
+  }, [notice, leader]);
   const load = useCallback(async () => {
     const { data, error } = await cloud!.rpc("get_team_roster", { p_team_id: team.id });
     if (error) {
@@ -43,7 +47,7 @@ export function TeamMembers({ team, profile }: { team: EventTeam; profile: Profi
     return () => clearInterval(timer);
   }, [load]);
   async function request(email: string, action: string, reason: string) {
-    if (busy) return;
+    if (busy) return false;
     setBusy(true);
     setError("");
     setNotice("");
@@ -54,11 +58,20 @@ export function TeamMembers({ team, profile }: { team: EventTeam; profile: Profi
         p_action: action,
         p_reason: reason,
       });
-      if (error) throw new Error(error.message);
-      setNotice("Solicitud enviada al asesor. El equipo cambia solo cuando se apruebe.");
+      if (error)
+        throw new Error(
+          error.code === "23505"
+            ? "Ya hay una solicitud pendiente para este estudiante. Consúltala en Solicitudes de integrantes."
+            : error.message,
+        );
+      setNotice(
+        `Solicitud enviada al asesor para ${email}. El cambio quedará pendiente hasta su aprobación.`,
+      );
       await load();
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo solicitar.");
+      return false;
     } finally {
       setBusy(false);
     }
@@ -74,8 +87,14 @@ export function TeamMembers({ team, profile }: { team: EventTeam; profile: Profi
           Actualizar integrantes
         </button>
       </div>
-      <p role="alert">{error}</p>
-      <p role="status">{notice}</p>
+      {(!leader || !roster) && (
+        <>
+          <p role="alert">{error}</p>
+          <p role="status" className={notice ? "member-confirmation" : undefined}>
+            {notice}
+          </p>
+        </>
+      )}
       {roster && (
         <>
           <p>
@@ -103,14 +122,16 @@ export function TeamMembers({ team, profile }: { team: EventTeam; profile: Profi
               <summary>Solicitar alta o baja de integrante</summary>
               <form
                 className="portal-form"
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  const form = new FormData(e.currentTarget);
-                  void request(
+                  const element = e.currentTarget;
+                  const form = new FormData(element);
+                  const saved = await request(
                     String(form.get("email")),
                     String(form.get("action")),
                     String(form.get("reason")),
                   );
+                  if (saved) element.reset();
                 }}
               >
                 <p>
@@ -133,8 +154,30 @@ export function TeamMembers({ team, profile }: { team: EventTeam; profile: Profi
                   <textarea name="reason" required maxLength={2000} />
                 </label>
                 <button className="button-primary" disabled={busy}>
-                  Solicitar aprobación del asesor
+                  {busy ? "Enviando solicitud…" : "Solicitar aprobación del asesor"}
                 </button>
+                <div
+                  ref={confirmationRef}
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className={notice ? "member-confirmation" : undefined}
+                >
+                  {notice && (
+                    <>
+                      <span className="member-confirmation-icon" aria-hidden="true">
+                        ✓
+                      </span>
+                      <div>
+                        <strong>Solicitud enviada correctamente</strong>
+                        <p>{notice}</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <p role="alert" className={error ? "member-request-error" : undefined}>
+                  {error}
+                </p>
               </form>
             </details>
           )}
