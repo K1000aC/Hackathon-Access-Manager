@@ -3984,3 +3984,67 @@ footer small {
   border-color: #e6b3f7;
   background: #7b1fa2;
 }
+.registration-auth-note,
+.registration-advisor-note {
+  padding: 14px 16px;
+  border-left: 3px solid #c2185b;
+  background: rgb(123 31 162 / 0.18);
+}
+.registration-panel textarea {
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #7b1fa2;
+  background: #2b054e;
+  color: white;
+  font-size: 15px;
+  resize: vertical;
+}
+.registration-panel label small {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #dec5ea;
+}
+.registration-panel .registration-advisor-note {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.team-members {
+  margin: 24px 0;
+  padding-top: 20px;
+  border-top: 1px solid #7b1fa2;
+}
+.member-list {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+.member-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid #7b1fa2;
+  border-radius: 12px;
+  background: rgb(43 5 78 / 0.6);
+}
+.member-list li > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.member-list li span {
+  font-size: 14px;
+}
+.team-members summary {
+  cursor: pointer;
+}
+.registration-session {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid #7b1fa2;
+  font-size: 15px;
+}

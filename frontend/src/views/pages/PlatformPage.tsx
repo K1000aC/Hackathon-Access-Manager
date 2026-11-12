@@ -15,6 +15,7 @@ import {
 } from "../../model/platform";
 import { icons } from "../components/icons";
 import type { ReactNode } from "react";
+import { TeamMembers } from "../components/TeamMembers";
 import { UserPanel } from "../components/UserPanel";
 import { AutomatonDiagram } from "../components/AutomatonDiagram";
 
@@ -75,7 +76,10 @@ function AuthForm({ initialNotice = "" }: { initialNotice?: string }) {
           </strong>
           <p>PLATAFORMA DEL EVENTO</p>
         </div>
-        <h1>Tu acceso, cada etapa, un mismo lugar.</h1>
+        <h1>Crea tu cuenta</h1>
+        <p className="auth-account-intro">
+          Crea tu cuenta o inicia sesión para registrar a tu equipo en el evento.
+        </p>
         <p>
           Entrega desde tu celular. Revisa y acompaña equipos desde tu computadora. Las aprobaciones
           hacen avanzar el autómata.
@@ -191,11 +195,12 @@ function registrationDraft() {
     return {
       name: typeof value.name === "string" ? value.name : "",
       category: typeof value.category === "string" ? value.category : "",
+      memberEmails: typeof value.memberEmails === "string" ? value.memberEmails : "",
       members:
         Number(value.members) >= 1 && Number(value.members) <= 10 ? Number(value.members) : 3,
     };
   } catch {
-    return { name: "", category: "", members: 3 };
+    return { name: "", category: "", members: 3, memberEmails: "" };
   }
 }
 function RegistrationLayout({
@@ -218,6 +223,11 @@ function RegistrationLayout({
             <span /> REGISTRO / PASE DE EQUIPO
           </div>
           <h1>Tu equipo empieza aquí.</h1>
+          <p className="registration-auth-note">
+            Para registrar un equipo debes iniciar sesión o crear tu cuenta en HackaFlow. Quien
+            genera el acceso será el líder y podrá solicitar cambios de integrantes al profesor
+            asesor.
+          </p>
           <p>
             Completa los datos para crear el pase de acceso y continuar con la mentoría y el
             prototipo.
@@ -289,6 +299,16 @@ function CreateTeam({
           <h2>Registra tu equipo</h2>
         </div>
       </div>
+      {requestLogin && (
+        <div className="registration-session">
+          <p>
+            Necesitas una cuenta para crear el acceso de tu equipo. El líder debe iniciar sesión.
+          </p>
+          <button type="button" className="button-secondary" onClick={requestLogin}>
+            Iniciar sesión o crear mi cuenta
+          </button>
+        </div>
+      )}
       <form
         onChange={(event) => {
           const form = new FormData(event.currentTarget);
@@ -299,6 +319,7 @@ function CreateTeam({
                 name: form.get("name"),
                 category: form.get("category"),
                 members: form.get("members"),
+                memberEmails: form.get("memberEmails"),
               }),
             );
           } catch {
@@ -326,6 +347,10 @@ function CreateTeam({
               p_name: name,
               p_category: String(form.get("category")),
               p_members: Number(form.get("members")),
+              p_member_emails: String(form.get("memberEmails") ?? "")
+                .split(/[\n,;]+/)
+                .map((email) => email.trim())
+                .filter(Boolean),
             });
             try {
               sessionStorage.removeItem("hackaflow.registrationDraft");
@@ -333,7 +358,13 @@ function CreateTeam({
               /* Registro completado. */
             }
           } catch (error) {
-            setError(error instanceof Error ? error.message : "No se pudo generar el acceso.");
+            setError(
+              error instanceof Error
+                ? error.message.includes("Could not find the function")
+                  ? "Falta activar el registro con integrantes en Supabase: ejecuta 004_team_members.sql."
+                  : error.message
+                : "No se pudo generar el acceso.",
+            );
           } finally {
             setBusy(false);
           }
@@ -389,6 +420,27 @@ function CreateTeam({
             ))}
           </select>
         </label>
+        {profile && (
+          <label>
+            Correos de integrantes con cuenta (opcional)
+            <textarea
+              name="memberEmails"
+              aria-label="Correos de integrantes con cuenta (opcional)"
+              defaultValue={draft.memberEmails}
+              maxLength={2000}
+              placeholder="estudiante@correo.com, otro@correo.com"
+            />
+            <small>
+              El cupo incluye al líder. Se enviarán solicitudes al profesor asignado
+              automáticamente. Todos deben tener cuenta confirmada; solo se incorporan al aprobar el
+              asesor.
+            </small>
+          </label>
+        )}
+        <p className="registration-advisor-note">
+          El líder es quien registra el equipo. Al generar el acceso se asignará un profesor asesor
+          automáticamente según disponibilidad.
+        </p>
         <label className="consent">
           <input type="checkbox" required />
           Acepto el reglamento y autorizo el registro del equipo.
@@ -571,6 +623,7 @@ function TeamPanel({
         ))}
       </div>
       {profile.role === "student" &&
+        team.owner_id === profile.id &&
         nextStage(team.chain) &&
         (pending ? (
           <p className="portal-pending">
@@ -579,6 +632,7 @@ function TeamPanel({
         ) : (
           <SubmitStage key={team.chain} team={team} action={action} />
         ))}
+      <TeamMembers team={team} profile={profile} />
       <h3>Entregas y observaciones</h3>
       {!submissions.length && <p>Aún no hay envíos.</p>}
       {submissions.map((item) => (

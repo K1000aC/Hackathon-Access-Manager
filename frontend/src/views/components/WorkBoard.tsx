@@ -168,7 +168,7 @@ export function WorkBoard({
               ))}
             </select>
           </label>
-          {student && ready && (
+          {student && teams.find((t) => t.id === teamId)?.owner_id === profile.id && ready && (
             <details className="history-card work-compose" open={editing ? true : undefined}>
               <summary>
                 {editing
@@ -288,19 +288,21 @@ export function WorkBoard({
                     <b>Observaciones:</b> {item.feedback}
                   </p>
                 )}
-                {student && ["draft", "changes_requested"].includes(item.status) && (
-                  <button
-                    className="button-secondary"
-                    onClick={() => {
-                      setEditing(item);
-                      document
-                        .querySelector(".work-compose")
-                        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }}
-                  >
-                    Editar / corregir
-                  </button>
-                )}
+                {student &&
+                  teams.find((t) => t.id === item.team_id)?.owner_id === profile.id &&
+                  ["draft", "changes_requested"].includes(item.status) && (
+                    <button
+                      className="button-secondary"
+                      onClick={() => {
+                        setEditing(item);
+                        document
+                          .querySelector(".work-compose")
+                          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }}
+                    >
+                      Editar / corregir
+                    </button>
+                  )}
                 {!student && item.status === "pending" && (
                   <form
                     className="portal-form"
