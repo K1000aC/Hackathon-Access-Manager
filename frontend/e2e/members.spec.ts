@@ -90,6 +90,24 @@ async function setup(
           requests,
         },
       });
+    if (u.pathname === "/rest/v1/rpc/request_team_member") {
+      if (requests.length)
+        return route.fulfill({
+          status: 400,
+          json: { code: "23505", message: "duplicate request" },
+        });
+      const values = req.postDataJSON();
+      requests.push({
+        id: "request",
+        name: "Sofía QA",
+        email: values.p_email,
+        action: values.p_action,
+        status: "pending",
+        reason: values.p_reason,
+        feedback: "",
+      });
+      return route.fulfill({ json: "request" });
+    }
     if (u.pathname === "/rest/v1/rpc/review_team_member") {
       approved = true;
       requests[0].status = "approved";
@@ -144,4 +162,44 @@ test("integrante consulta el equipo sin controles de líder", async ({ page }) =
   await expect(
     page.getByRole("button", { name: "Enviar para aprobación", exact: true }),
   ).toHaveCount(0);
+});
+
+test("solicitud confirma el envío junto al botón y no anuncia éxito si falla", async ({
+  page,
+}, info) => {
+  await setup(page, "leader");
+  await page.getByRole("tab", { name: "Mi equipo", exact: true }).click();
+  const toggle = page.getByText("Solicitar alta o baja de integrante", { exact: true });
+  await toggle.click();
+  await expect(toggle).toHaveCSS("display", "flex");
+  await page.getByLabel("Correo del estudiante", { exact: true }).fill("sofia@example.com");
+  await page.getByLabel("Motivo del cambio", { exact: true }).fill("Se incorpora al prototipo.");
+  await page.route(
+    "**/rest/v1/rpc/request_team_member",
+    (route) =>
+      route.fulfill({ status: 503, json: { message: "Servicio temporalmente no disponible" } }),
+    { times: 1 },
+  );
+  await page.getByRole("button", { name: "Solicitar aprobación del asesor", exact: true }).click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Servicio temporalmente no disponible" }),
+  ).toBeVisible();
+  await expect(page.getByText("Solicitud enviada correctamente", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Correo del estudiante", { exact: true })).toHaveValue(
+    "sofia@example.com",
+  );
+  await page.getByRole("button", { name: "Solicitar aprobación del asesor", exact: true }).click();
+  const message = page.getByRole("status").filter({ hasText: "Solicitud enviada correctamente" });
+  await expect(message).toBeInViewport();
+  await expect(message).toContainText("sofia@example.com");
+  await expect(message).toContainText("pendiente hasta su aprobación");
+  await expect(page.getByLabel("Correo del estudiante", { exact: true })).toHaveValue("");
+  await page.screenshot({ path: info.outputPath("solicitud-confirmada.png") });
+  await page.getByLabel("Correo del estudiante", { exact: true }).fill("sofia@example.com");
+  await page.getByLabel("Motivo del cambio", { exact: true }).fill("Reintento");
+  await page.getByRole("button", { name: "Solicitar aprobación del asesor", exact: true }).click();
+  await expect(page.getByText("Solicitud enviada correctamente", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Ya hay una solicitud pendiente" }),
+  ).toBeVisible();
 });
