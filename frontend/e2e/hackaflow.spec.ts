@@ -45,6 +45,60 @@ test("registro compartido requiere sesión, valida campos y persiste después de
   await navigate(page, "Registro");
   await expect(page.getByRole("heading", { name: "Tu equipo ya tiene acceso" })).toBeVisible();
 });
+test("AFD: muestra el progreso real del equipo registrado y reproduce su recorrido", async ({
+  page,
+}) => {
+  await registerTeam(page, "Equipo del AFD");
+  await navigate(page, "Modelo AFD");
+
+  const diagram = page.locator(".diagram-first");
+  const console = page.locator("#simulador");
+  expect(await diagram.evaluate((element) => element.getBoundingClientRect().bottom)).toBeLessThan(
+    await console.evaluate((element) => element.getBoundingClientRect().top),
+  );
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await expect(page.getByTestId("state-qerr")).toBeVisible();
+
+  const teamCard = page.locator(".team-progress-card").filter({ hasText: "Equipo del AFD" });
+  await expect(teamCard).toContainText("R · Falta aprobar la mentoría");
+  await teamCard.getByRole("button", { name: "Ver progreso", exact: true }).click();
+  await expect(page.getByTestId("state-q1")).toHaveClass(/active/);
+  await expect(page.getByLabel("Simular un equipo registrado")).toHaveValue("qa-team");
+  await expect(page.getByTestId("simulation-result")).toContainText(
+    "Equipo en progreso · Registro",
+  );
+  await page.getByRole("button", { name: "Ejecutar cadena", exact: true }).click();
+  await expect(page.getByTestId("simulation-result")).toContainText(
+    "Equipo en progreso · Registro",
+  );
+  await expect(page.locator(".state-node.visited")).toHaveCount(1);
+});
+
+test("AFD: casos de ejemplo cubren fases parciales y rechazo", async ({ page }) => {
+  await navigate(page, "Modelo AFD");
+  const cases = page.getByLabel("Casos de prueba", { exact: true });
+
+  await cases.selectOption("RM");
+  await expect(page.getByLabel("Cadena de eventos", { exact: true })).toHaveValue("RM");
+  await expect(page.getByRole("button", { name: "Paso", exact: true })).toBeEnabled();
+
+  await cases.selectOption("RP");
+  await expect(page.getByLabel("Cadena de eventos", { exact: true })).toHaveValue("RP");
+  await page.getByRole("button", { name: "Ejecutar cadena", exact: true }).click();
+  await expect(page.getByTestId("simulation-result")).toContainText(
+    "Cadena rechazada · Acceso denegado",
+  );
+  await expect(page.getByTestId("state-qerr")).toBeVisible();
+
+  await cases.selectOption("RMP");
+  await page.getByRole("button", { name: "Ejecutar cadena", exact: true }).click();
+  await expect(page.getByTestId("simulation-result")).toContainText(
+    "Cadena aceptada · Acceso concedido",
+  );
+});
+
 test("AFD válido: R M P paso a paso, estilos neón y sesión persistente", async ({ page }) => {
   await navigate(page, "Modelo AFD");
   await page.getByLabel("Cadena de eventos", { exact: true }).fill("R M P");
@@ -93,7 +147,8 @@ test("AFD inválido: R P ejecuta, rechaza en qerr y permite reiniciar", async ({
   await page.getByRole("button", { name: "Reiniciar simulación" }).click();
   await expect(page.getByTestId("state-q0")).toHaveClass(/active/);
   await expect(result).not.toHaveClass(/rejected|accepted/);
-  await expect(page.getByTestId("state-qerr")).toHaveCount(0);
+  await expect(page.getByTestId("state-qerr")).toBeVisible();
+  await expect(page.getByTestId("state-qerr")).not.toHaveClass(/active/);
 });
 
 test("AFD: entrada vacía deshabilita acciones y un símbolo extra pierde aceptación", async ({

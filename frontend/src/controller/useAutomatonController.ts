@@ -71,9 +71,10 @@ export function useAutomatonController() {
     return () => window.clearTimeout(timer);
   }, [cursor, input.length, isRunning]);
 
-  const setInput = (value: string) => {
-    setInputValue(value.toUpperCase().replace(/\s/g, "").slice(0, 12));
-    setCursor(0);
+  const setInput = (value: string, initialCursor = 0) => {
+    const normalized = value.toUpperCase().replace(/\s/g, "").slice(0, 12);
+    setInputValue(normalized);
+    setCursor(Math.min(initialCursor, normalized.length));
     setIsRunning(false);
   };
 

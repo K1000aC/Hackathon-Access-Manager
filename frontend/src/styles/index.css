@@ -638,6 +638,124 @@ main {
   padding: 34px 38px 28px;
 }
 
+.diagram-first {
+  margin-top: -28px;
+  margin-bottom: 20px;
+}
+
+.team-progress-section {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 20px;
+  padding: 28px;
+  border: 1px solid rgb(123 31 162 / 0.5);
+  background: rgb(26 0 51 / 0.82);
+  box-shadow: 0 22px 60px rgb(26 0 51 / 0.24);
+}
+
+.team-progress-section .work-explanation {
+  margin: 0;
+}
+
+.team-progress-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.team-progress-stats > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid rgb(123 31 162 / 0.4);
+  background: rgb(43 5 78 / 0.5);
+}
+
+.team-progress-stats strong {
+  color: #ffffff;
+  font-size: 24px;
+}
+
+.team-progress-stats span,
+.team-progress-card small {
+  color: rgb(255 255 255 / 0.58);
+  font-size: 11px;
+}
+
+.team-progress-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+
+.team-progress-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgb(123 31 162 / 0.4);
+  background: rgb(43 5 78 / 0.48);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.team-progress-card.selected {
+  border-color: #c2185b;
+  box-shadow: 0 0 24px rgb(194 24 91 / 0.2);
+  transform: translateY(-2px);
+}
+
+.team-progress-card > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.team-progress-card h3,
+.team-progress-card p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.team-progress-card p {
+  color: rgb(255 255 255 / 0.68);
+  font-size: 13px;
+}
+
+.team-progress-card button {
+  width: 100%;
+}
+
+.team-sequence {
+  display: flex;
+  gap: 8px;
+}
+
+.team-sequence span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgb(123 31 162 / 0.7);
+  border-radius: 50%;
+  color: rgb(255 255 255 / 0.42);
+  background: #1a0033;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.team-sequence span.done {
+  border-color: #c2185b;
+  color: #ffffff;
+  background: rgb(194 24 91 / 0.3);
+  box-shadow: 0 0 12px rgb(194 24 91 / 0.18);
+}
+
 .current-state {
   display: flex;
   align-items: center;
@@ -658,16 +776,16 @@ main {
 
 .diagram-wrap {
   position: relative;
-  min-height: 250px;
-  margin-top: 15px;
+  min-height: 330px;
+  margin-top: 20px;
 }
 
 .diagram-lines {
   position: absolute;
-  top: 17px;
+  top: 0;
   left: 0;
   width: 100%;
-  height: 210px;
+  height: 300px;
   overflow: visible;
 }
 
@@ -679,15 +797,42 @@ main {
   vector-effect: non-scaling-stroke;
 }
 
+.transition-line.completed {
+  stroke: rgb(194 24 91 / 0.72);
+  stroke-width: 2.5;
+}
+
 .transition-line.active {
   stroke: #c2185b;
   stroke-width: 3;
   filter: drop-shadow(0 0 5px #c2185b);
 }
 
+.transition-error {
+  fill: none;
+  stroke: rgb(194 24 91 / 0.72);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+  vector-effect: non-scaling-stroke;
+}
+
+.error-loop {
+  stroke-dasharray: none;
+}
+
+.error-edge-label {
+  fill: #ff8eaf;
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #1a0033;
+  stroke-width: 5px;
+}
+
 .state-row {
   position: absolute;
-  top: 70px;
+  top: 55px;
   right: 7%;
   left: 7%;
   display: grid;
@@ -739,6 +884,28 @@ main {
     0 0 32px rgb(194 24 91 / 0.5);
 }
 
+.state-node.visited:not(.active) {
+  border-color: rgb(194 24 91 / 0.75);
+  box-shadow:
+    0 0 0 7px rgb(194 24 91 / 0.08),
+    0 0 18px rgb(194 24 91 / 0.2);
+}
+
+.state-visit {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #c2185b;
+  font-size: 12px;
+}
+
 .state-name {
   margin-top: 15px;
   color: rgb(255 255 255 / 0.65);
@@ -765,16 +932,16 @@ main {
 }
 
 .label-r {
-  left: 24.5%;
+  left: 28%;
 }
 .label-m {
   left: 49.5%;
 }
 .label-p {
-  left: 74.5%;
+  left: 71.5%;
 }
 .start-label {
-  top: 93px;
+  top: 87px;
   left: 0;
   color: rgb(255 255 255 / 0.35);
   font-size: 8px;
@@ -784,8 +951,8 @@ main {
 .error-orbit {
   position: absolute;
   z-index: 4;
-  right: 0;
   bottom: 4px;
+  left: 61%;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -793,6 +960,15 @@ main {
   border: 1px solid #c2185b;
   background: #1a0033;
   box-shadow: 0 0 18px rgb(194 24 91 / 0.3);
+  transform: translateX(-50%);
+}
+
+.error-orbit.active {
+  color: #ffffff;
+  background: rgb(194 24 91 / 0.24);
+  box-shadow:
+    0 0 0 5px rgb(194 24 91 / 0.1),
+    0 0 24px rgb(194 24 91 / 0.42);
 }
 
 .error-orbit span {
@@ -803,6 +979,51 @@ main {
 .error-orbit small {
   color: rgb(255 255 255 / 0.4);
   font-size: 8px;
+}
+
+.error-orbit.active small {
+  color: rgb(255 255 255 / 0.76);
+}
+
+.diagram-explanation {
+  position: relative;
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  border-left: 2px solid #c2185b;
+  color: rgb(255 255 255 / 0.68);
+  background: rgb(43 5 78 / 0.52);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.diagram-explanation b {
+  color: #ffffff;
+}
+
+.case-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.case-picker select,
+.simulator-card select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid rgb(123 31 162 / 0.8);
+  border-radius: 6px;
+  color: #ffffff;
+  background: #1a0033;
+}
+
+.simulator-card > label:has(select) {
+  margin-top: 18px;
+}
+
+.simulator-card > label select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
 }
 
 .bottom-grid {
@@ -1780,7 +2001,7 @@ footer small {
   }
 
   .diagram-wrap {
-    min-height: 580px;
+    min-height: 700px;
   }
 
   .diagram-lines,
@@ -1801,11 +2022,24 @@ footer small {
 
   .state-column:not(:last-child)::after {
     position: absolute;
-    bottom: -20px;
-    width: 1px;
-    height: 16px;
-    background: #7b1fa2;
-    content: "";
+    bottom: -23px;
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    color: #c2185b;
+    content: "↓";
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .error-orbit {
+    left: 50%;
+    max-width: 100%;
+  }
+
+  .error-orbit small {
+    font-size: 9px;
   }
 }
 
