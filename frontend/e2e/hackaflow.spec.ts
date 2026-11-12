@@ -43,7 +43,7 @@ test("registro compartido requiere sesión, valida campos y persiste después de
   await expect(page.getByRole("button", { name: "Aprobar etapa" })).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath("seguimiento.png"), fullPage: true });
   await navigate(page, "Registro");
-  await expect(page.getByRole("heading", { name: "Tu equipo ya está registrado" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tu equipo ya tiene acceso" })).toBeVisible();
 });
 test("AFD válido: R M P paso a paso, estilos neón y sesión persistente", async ({ page }) => {
   await navigate(page, "Modelo AFD");
@@ -139,7 +139,7 @@ test("dashboard: registro separado, logo, navegación lateral y sin desbordamien
   await lateral.getByRole("button", { name: /Modelo AFD/ }).click();
   await expect(page.getByRole("heading", { name: "Simulador de acceso" })).toBeVisible();
   await navigate(page, "Inicio");
-  await page.getByRole("button", { name: "Registrar mi equipo", exact: false }).click();
+  await page.getByRole("button", { name: "Crear acceso de mi equipo", exact: false }).click();
   await expect(
     page.getByRole("heading", { name: "Registra tu equipo", exact: true }),
   ).toBeVisible();
@@ -156,19 +156,42 @@ test("las tres vistas son diferentes antes y después de iniciar sesión y conse
     true,
   );
   await page.screenshot({ path: testInfo.outputPath("registro.png"), fullPage: true });
+  await expect(page.getByText("REG / 001", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("WORKSPACE / 2025", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Generar acceso", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Iniciar sesión", exact: true })).toHaveCount(0);
+  await page.getByLabel("Nombre del equipo", { exact: true }).fill("   ");
+  await page.getByLabel("Acepto el reglamento", { exact: false }).check();
+  await page.getByRole("button", { name: "Generar acceso", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Escribe un nombre de equipo");
   await page.getByLabel("Nombre del equipo", { exact: true }).fill("Equipo QA");
   await page
     .getByRole("combobox", { name: "Categoría de participación", exact: true })
     .selectOption("Tecnología educativa");
   await page.getByLabel("Acepto el reglamento", { exact: false }).check();
-  await page.getByRole("button", { name: "Guardar registro" }).click();
+  await page.getByRole("button", { name: "Generar acceso" }).click();
   await page.getByLabel("Correo", { exact: true }).fill("qa@example.com");
   await page.getByLabel("Contraseña", { exact: true }).fill("Test-password-123");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page.getByLabel("Nombre del equipo", { exact: true })).toHaveValue("Equipo QA");
+  await expect(page.getByLabel("Líder del equipo", { exact: true })).toHaveValue("Liz QA");
+  await expect(page.getByLabel("Correo de contacto", { exact: true })).toHaveValue(
+    "qa@example.com",
+  );
+  await page.route(
+    "**/rest/v1/rpc/register_event_team",
+    (route) =>
+      route.fulfill({ status: 503, json: { message: "Servicio temporalmente no disponible" } }),
+    { times: 1 },
+  );
   await page.getByLabel("Acepto el reglamento", { exact: false }).check();
-  await page.getByRole("button", { name: "Guardar registro" }).click();
-  await expect(page.getByRole("heading", { name: "Tu equipo ya está registrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Generar acceso", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Servicio temporalmente no disponible");
+  await expect(page.getByLabel("Nombre del equipo", { exact: true })).toHaveValue("Equipo QA");
+
+  await page.getByLabel("Acepto el reglamento", { exact: false }).check();
+  await page.getByRole("button", { name: "Generar acceso" }).click();
+  await expect(page.getByRole("heading", { name: "Tu equipo ya tiene acceso" })).toBeVisible();
   await navigate(page, "Mi panel");
   await expect(page.getByRole("heading", { name: "Mi cuenta", exact: true })).toBeVisible();
   await expect(

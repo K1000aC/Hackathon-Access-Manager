@@ -180,7 +180,7 @@ function RegistrationLayout({
           </div>
           <h1>Tu equipo empieza aquí.</h1>
           <p>
-            Completa los datos para guardar el pase de registro y continuar con la mentoría y el
+            Completa los datos para crear el pase de acceso y continuar con la mentoría y el
             prototipo.
           </p>
           <div className="registration-requirements">
@@ -243,11 +243,10 @@ function CreateTeam({
   const [error, setError] = useState("");
   return (
     <section className="registration-panel">
-      <div className="panel-number">REG / 001</div>
       <div className="registration-heading">
         <span>{icons.ticket}</span>
         <div>
-          <p>NUEVO REGISTRO</p>
+          <p>NUEVO ACCESO</p>
           <h2>Registra tu equipo</h2>
         </div>
       </div>
@@ -269,7 +268,14 @@ function CreateTeam({
         }}
         onSubmit={async (event) => {
           event.preventDefault();
+          if (busy) return;
+          setError("");
           const form = new FormData(event.currentTarget);
+          const name = String(form.get("name") ?? "").trim();
+          if (!name) {
+            setError("Escribe un nombre de equipo para generar su acceso.");
+            return;
+          }
           if (requestLogin) {
             requestLogin();
             return;
@@ -278,7 +284,7 @@ function CreateTeam({
           setBusy(true);
           try {
             await action("register_event_team", {
-              p_name: String(form.get("name")),
+              p_name: name,
               p_category: String(form.get("category")),
               p_members: Number(form.get("members")),
             });
@@ -288,7 +294,7 @@ function CreateTeam({
               /* Registro completado. */
             }
           } catch (error) {
-            setError(error instanceof Error ? error.message : "No se pudo registrar.");
+            setError(error instanceof Error ? error.message : "No se pudo generar el acceso.");
           } finally {
             setBusy(false);
           }
@@ -349,7 +355,7 @@ function CreateTeam({
           Acepto el reglamento y autorizo el registro del equipo.
         </label>
         <button className="generate-pass" disabled={busy}>
-          {busy ? "Guardando…" : "Guardar registro"}
+          {busy ? "Generando acceso…" : "Generar acceso"}
           {icons.arrow}
         </button>
         <p className="secure-note">
@@ -794,9 +800,9 @@ export function PlatformPage({
           ) : teams.length ? (
             <section className="history-card registration-confirmed">
               <span className="registration-seal">R</span>
-              <h2>Tu equipo ya está registrado</h2>
+              <h2>Tu equipo ya tiene acceso</h2>
               <h3>{teams[0].name}</h3>
-              <p>El registro y su progreso están guardados en la plataforma.</p>
+              <p>El acceso y su progreso están guardados en la plataforma.</p>
               <button className="button-primary" onClick={() => onNavigate?.("equipos")}>
                 Continuar al seguimiento
               </button>
@@ -954,7 +960,7 @@ export function PlatformPage({
           <h2>Tu próximo proyecto empieza con un equipo</h2>
           <p>Registra a tu equipo para activar el seguimiento y enviar actividades al asesor.</p>
           <button className="button-primary" onClick={() => onNavigate?.("registro")}>
-            Registrar mi equipo
+            Crear acceso de mi equipo
           </button>
         </section>
       )}

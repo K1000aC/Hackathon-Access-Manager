@@ -38,7 +38,7 @@ export function DashboardPage({
         </div>
         <div className="dashboard-cta-actions">
           <button className="generate-pass" onClick={onRegister}>
-            Registrar mi equipo {icons.arrow}
+            Crear acceso de mi equipo {icons.arrow}
           </button>
           <button className="dashboard-link" onClick={onPanel}>
             Entrar a la plataforma compartida ↗
