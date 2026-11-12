@@ -1,4 +1,4 @@
--- Ejecutar una vez en un proyecto Supabase nuevo desde SQL Editor.
+-- Se ejecuto SOLO una vez en el proyecto Supabase nuevo desde SQL Editor.
 begin;
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
