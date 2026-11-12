@@ -93,9 +93,12 @@ export async function registerTeam(page: Page, teamName = "Equipo QA") {
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await navigate(page, "Registro");
   await expect(page.getByRole("heading", { name: "Registra tu equipo" })).toBeVisible();
-  await page.getByLabel("Nombre", { exact: true }).fill(teamName);
-  await page.getByLabel("Categoría", { exact: true }).fill("Tecnología educativa");
-  await page.getByLabel("Integrantes", { exact: true }).fill("4");
-  await page.getByRole("button", { name: "Guardar registro (R)", exact: true }).click();
+  await page.getByLabel("Nombre del equipo", { exact: true }).fill(teamName);
+  await page
+    .getByRole("combobox", { name: "Categoría de participación", exact: true })
+    .selectOption("Tecnología educativa");
+  await page.getByRole("combobox", { name: "Integrantes", exact: true }).selectOption("4");
+  await page.getByLabel("Acepto el reglamento", { exact: false }).check();
+  await page.getByRole("button", { name: "Guardar registro", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Tu equipo ya está registrado" })).toBeVisible();
 }

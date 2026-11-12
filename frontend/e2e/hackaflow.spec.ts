@@ -148,16 +148,26 @@ test("dashboard: registro separado, logo, navegación lateral y sin desbordamien
 
 test("las tres vistas son diferentes antes y después de iniciar sesión y conservan el formulario", async ({
   page,
-}) => {
+}, testInfo) => {
   await navigate(page, "Registro");
-  await page.getByLabel("Nombre", { exact: true }).fill("Equipo QA");
-  await page.getByLabel("Categoría", { exact: true }).fill("Educación");
-  await page.getByRole("button", { name: "Continuar e iniciar sesión" }).click();
+  await expect(page.getByRole("heading", { name: "Un pase. Tres hitos." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Visualizar el autómata" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.screenshot({ path: testInfo.outputPath("registro.png"), fullPage: true });
+  await page.getByLabel("Nombre del equipo", { exact: true }).fill("Equipo QA");
+  await page
+    .getByRole("combobox", { name: "Categoría de participación", exact: true })
+    .selectOption("Tecnología educativa");
+  await page.getByLabel("Acepto el reglamento", { exact: false }).check();
+  await page.getByRole("button", { name: "Guardar registro" }).click();
   await page.getByLabel("Correo", { exact: true }).fill("qa@example.com");
   await page.getByLabel("Contraseña", { exact: true }).fill("Test-password-123");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await expect(page.getByLabel("Nombre", { exact: true })).toHaveValue("Equipo QA");
-  await page.getByRole("button", { name: "Guardar registro (R)" }).click();
+  await expect(page.getByLabel("Nombre del equipo", { exact: true })).toHaveValue("Equipo QA");
+  await page.getByLabel("Acepto el reglamento", { exact: false }).check();
+  await page.getByRole("button", { name: "Guardar registro" }).click();
   await expect(page.getByRole("heading", { name: "Tu equipo ya está registrado" })).toBeVisible();
   await navigate(page, "Mi panel");
   await expect(page.getByRole("heading", { name: "Mi cuenta", exact: true })).toBeVisible();
