@@ -22,7 +22,7 @@ export function authErrorMessage(error: unknown, recovery = false): string {
       "El proveedor de correo de Supabase no permite enviar a esta dirección. El organizador debe configurar SMTP.",
     otp_expired: "El enlace expiró o ya fue utilizado. Solicita uno nuevo.",
     same_password: "La contraseña nueva debe ser diferente de la anterior.",
-    weak_password: "La contraseña no cumple los requisitos de seguridad del proyecto.",
+    weak_password: "La contraseña no cumple los requisitos de seguridad de la plataforma.",
   };
   const detail =
     messages[code] ||

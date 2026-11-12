@@ -133,9 +133,9 @@ export function WorkBoard({
           <span>ORGANIZA / ENTREGA / MEJORA</span>
           <h2>
             {kind === "task"
-              ? "Entregas y tareas del proyecto"
+              ? "Entregas y tareas del proyecto final"
               : kind === "backlog"
-                ? "Backlog del proyecto"
+                ? "Backlog del proyecto final"
                 : "Sprints del equipo"}
           </h2>
           <p>
@@ -149,7 +149,7 @@ export function WorkBoard({
         </button>
       </div>
       <p className="work-explanation">
-        Estas entregas organizan el proyecto. Las etapas del acceso R → M → P se aprueban en Mis
+        Estas entregas organizan el proyecto final. Las etapas del acceso R → M → P se aprueban en Mis
         entregas o Por revisar.
       </p>
       <p role="alert">{error}</p>
@@ -213,7 +213,7 @@ export function WorkBoard({
                       defaultValue={editing?.title}
                       placeholder={
                         kind === "task"
-                          ? "Ej. Propuesta inicial del proyecto"
+                          ? "Ej. Propuesta inicial del proyecto final"
                           : kind === "backlog"
                             ? "Ej. Definir historias de usuario"
                             : "Ej. Sprint 1 · Prototipo inicial"

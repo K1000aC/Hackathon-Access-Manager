@@ -147,7 +147,9 @@ test("estudiante: gestión unificada con enlaces públicos y tarea con PPTX", as
     .getByLabel("Resumen del avance", { exact: true })
     .fill("Sprint 1: prototipo en curso.");
   await page.getByLabel("Confirmo que ambos enlaces son públicos", { exact: false }).check();
-  await page.getByRole("button", { name: "Guardar gestión del proyecto", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Guardar gestión del proyecto final", exact: true })
+    .click();
   await expect(
     page.getByText("Visibilidad pendiente de revisión del asesor", { exact: true }),
   ).toBeVisible();

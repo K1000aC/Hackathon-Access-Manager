@@ -35,7 +35,7 @@ export function ProjectManagement({ profile, teams }: { profile: Profile; teams:
       setError(
         ["42P01", "PGRST205"].includes(error.code)
           ? "Falta activar gestión y entregas con 005_project_deliveries.sql."
-          : "No se pudo consultar la gestión del proyecto.",
+          : "No se pudo consultar la gestión del proyecto final.",
       );
       return;
     }
@@ -56,7 +56,7 @@ export function ProjectManagement({ profile, teams }: { profile: Profile; teams:
       <div className="panel-section-title">
         <div>
           <span>BACKLOG / SPRINTS / REPOSITORIO</span>
-          <h2>Gestión del proyecto</h2>
+          <h2>Gestión del proyecto final</h2>
           <p>
             Comparte tu tablero público de trabajo, el repositorio público y un resumen de lo que
             está planeado, en curso y terminado.
@@ -68,7 +68,7 @@ export function ProjectManagement({ profile, teams }: { profile: Profile; teams:
       ) : (
         <>
           <label className="work-team-filter">
-            Proyecto
+            Proyecto final
             <select value={teamId} onChange={(e) => setTeamId(e.target.value)}>
               {teams.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -119,7 +119,7 @@ export function ProjectManagement({ profile, teams }: { profile: Profile; teams:
           )}
           {ready && !data && (
             <p className="history-card">
-              El líder todavía no ha compartido los enlaces del proyecto.
+              El líder todavía no ha compartido los enlaces del proyecto final.
             </p>
           )}
           {ready && leader && (
@@ -194,7 +194,7 @@ export function ProjectManagement({ profile, teams }: { profile: Profile; teams:
                   Confirmo que ambos enlaces son públicos y abren sin iniciar sesión.
                 </label>
                 <button className="button-primary" disabled={busy}>
-                  Guardar gestión del proyecto
+                  Guardar gestión del proyecto final
                 </button>
               </form>
             </details>

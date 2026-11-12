@@ -48,7 +48,7 @@ export function DashboardPage({
       </section>
       <section className="dashboard-story">
         <div className="section-intro">
-          <span>02 / EL PROYECTO</span>
+          <span>02 / PROYECTO FINAL</span>
           <h2>
             Menos barreras.
             <br />
@@ -80,9 +80,9 @@ export function DashboardPage({
             <span>03 / PROYECCIÓN</span>
             <h3>Crecer con cada edición</h3>
             <p>
-              La siguiente etapa del proyecto contempla múltiples eventos, colaboración entre
-              integrantes y más herramientas de seguimiento. Es nuestra proyección, no una función
-              activa todavía.
+              La siguiente etapa de este proyecto final contempla múltiples eventos, colaboración
+              entre integrantes y más herramientas de seguimiento. Es nuestra proyección, no una
+              función activa todavía.
             </p>
           </article>
         </div>
@@ -95,7 +95,7 @@ export function DashboardPage({
             <br />
             Pensado para construir en equipo.
           </h2>
-          <p>Diseño y desarrollo del software como proyecto de Teoría de la Computación.</p>
+          <p>Diseño y desarrollo del software como proyecto final de Teoría de la Computación.</p>
         </div>
         <div className="creator-names">
           <article>

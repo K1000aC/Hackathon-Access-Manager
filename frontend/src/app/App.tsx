@@ -210,7 +210,7 @@ export default function App() {
           <b>HackaFlow</b>
           <span>Gestor y Control de Accesos para Hackatones</span>
         </div>
-        <small>PROYECTO · TEORÍA DE LA COMPUTACIÓN</small>
+        <small>PROYECTO FINAL · TEORÍA DE LA COMPUTACIÓN</small>
       </footer>
     </div>
   );

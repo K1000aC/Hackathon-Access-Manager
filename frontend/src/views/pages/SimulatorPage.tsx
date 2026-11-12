@@ -37,7 +37,7 @@ export function SimulatorPage() {
       <section className="hero">
         <div>
           <div className="eyebrow">
-            <span /> TEORÍA DE LA COMPUTACIÓN · UNIDAD 5
+            <span /> TEORÍA DE LA COMPUTACIÓN · PROYECTO FINAL
           </div>
           <h1>
             Control de acceso,
@@ -46,7 +46,8 @@ export function SimulatorPage() {
           </h1>
           <p>
             Prueba cadenas en modo educativo. Estas pruebas no modifican equipos ni certificaciones.
-            Explora un Autómata Finito Determinista.
+            Explora el Autómata Finito Determinista que modela las etapas de acceso de este proyecto
+            final.
           </p>
         </div>
         <div className="hero-stat">

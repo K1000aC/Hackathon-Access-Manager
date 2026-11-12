@@ -99,7 +99,7 @@ export function UserPanel({
           <p>
             {student
               ? "Tu acceso, tus entregas y cada avance del equipo."
-              : "Acompaña los proyectos y encuentra cada revisión en su lugar."}
+              : "Acompaña los proyectos finales y encuentra cada revisión en su lugar."}
           </p>
         </div>
         <button className="button-secondary" onClick={onLogout}>
@@ -191,8 +191,8 @@ export function UserPanel({
         {tab === "entregas" && <WorkBoard kind="task" profile={profile} teams={teams} />}
         {tab === "certificados" && (
           <p className="work-explanation">
-            Certificado de finalización: acredita que el equipo entregó su propuesta final de
-            proyecto y que el asesor asignado la revisó, aprobó y calificó. Sin entrega final
+            Certificado de finalización: acredita que el equipo entregó la propuesta de su proyecto
+            final y que el asesor asignado la revisó, aprobó y calificó. Sin entrega final
             aprobada y calificación registrada no se emite el certificado.
           </p>
         )}
@@ -227,7 +227,7 @@ export function UserPanel({
                 <p>
                   {student && !teams.length
                     ? "Crea el acceso de tu equipo para comenzar."
-                    : "Aquí aparecerán los proyectos correspondientes a este apartado."}
+                    : "Aquí aparecerán los proyectos finales correspondientes a este apartado."}
                 </p>
                 {student && !teams.length && (
                   <button className="button-primary" onClick={onRegister}>

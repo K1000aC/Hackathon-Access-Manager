@@ -706,7 +706,7 @@ function TeamPanel({
         {team.advisor_id ? "Asesor asignado" : "Pendiente de asignación de asesor"} ·{" "}
         {team.chain === "RMP"
           ? hasFinalCertificate(team)
-            ? "Proyecto con certificado de finalización"
+            ? "Proyecto final con certificado de finalización"
             : "Entrega final sin calificación registrada"
           : team.chain === "R"
             ? "Pendiente de mentoría aprobada"
@@ -838,7 +838,7 @@ function TeamPanel({
           <h2>Certificado de finalización</h2>
           <h3>{team.name}</h3>
           <p>
-            La propuesta final del proyecto fue entregada, revisada, aprobada y calificada por el
+            La propuesta del proyecto final fue entregada, revisada, aprobada y calificada por el
             asesor asignado. Registro, mentoría y prototipo completados.
           </p>
           <p>
@@ -1246,7 +1246,7 @@ export function PlatformPage({
           <span>P</span>
         </div>
         <div>
-          <h2>Del primer paso al proyecto certificado</h2>
+          <h2>Del primer paso a la certificación del proyecto final</h2>
           <p>Consulta entregas, revisiones y el avance de cada equipo en un mismo lugar.</p>
         </div>
       </div>
@@ -1267,7 +1267,7 @@ export function PlatformPage({
       {profile.role === "student" && !teams.length && (
         <section className="history-card tracking-empty">
           <span className="registration-seal">R</span>
-          <h2>Tu próximo proyecto empieza con un equipo</h2>
+          <h2>Tu proyecto final empieza con un equipo</h2>
           <p>Registra a tu equipo para activar el seguimiento y enviar actividades al asesor.</p>
           <button className="button-primary" onClick={() => onNavigate?.("registro")}>
             Crear acceso de mi equipo
