@@ -60,6 +60,10 @@ async function login(context, account) {
   const page = await context.newPage();
   page.setDefaultTimeout(20000);
   await page.goto(target);
+  await page
+    .getByRole("navigation", { name: "Navegación principal" })
+    .getByRole("button", { name: "Mi panel", exact: true })
+    .click();
   await page.getByLabel("Correo", { exact: true }).fill(account.email);
   await page.getByLabel("Contraseña", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();

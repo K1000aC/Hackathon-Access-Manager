@@ -16,14 +16,21 @@ export default function App() {
   const toggleRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const media = window.matchMedia("(max-width: 1180px)");
-    const resize = () => { setCompact(media.matches); setSidebarOpen(false); };
+    const resize = () => {
+      setCompact(media.matches);
+      setSidebarOpen(false);
+    };
     media.addEventListener("change", resize);
     return () => media.removeEventListener("change", resize);
   }, []);
   useEffect(() => {
-    if (sidebarOpen && compact) sidebarRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    if (sidebarOpen && compact)
+      sidebarRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
   }, [sidebarOpen, compact]);
-  const closeSidebar = () => { setSidebarOpen(false); toggleRef.current?.focus(); };
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+    toggleRef.current?.focus();
+  };
 
   const items: { id: Section; label: string; index: string }[] = [
     { id: "inicio", label: "Inicio", index: "01" },
@@ -116,13 +123,24 @@ export default function App() {
           if (event.key === "Tab" && compact && sidebarOpen) {
             const buttons = sidebarRef.current?.querySelectorAll<HTMLButtonElement>("button");
             if (!buttons?.length) return;
-            const first = buttons[0], last = buttons[buttons.length-1];
-            if(event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-            if(!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+            const first = buttons[0],
+              last = buttons[buttons.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+              event.preventDefault();
+              last.focus();
+            }
+            if (!event.shiftKey && document.activeElement === last) {
+              event.preventDefault();
+              first.focus();
+            }
           }
         }}
       >
-        {compact && <button className="sidebar-close" onClick={closeSidebar}>Cerrar menú ×</button>}
+        {compact && (
+          <button className="sidebar-close" onClick={closeSidebar}>
+            Cerrar menú ×
+          </button>
+        )}
         <div className="sidebar-intro">
           <span>WORKSPACE / 2025</span>
           <h2>

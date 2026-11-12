@@ -2944,7 +2944,31 @@ footer small {
   }
 }
 
-@layer base { body { color: #FFFFFF; } button { color: inherit; } }
-.with-sidebar { color: #FFFFFF; }
-.dashboard-page h1, .dashboard-page h2, .dashboard-page h3, .dashboard-page b, .visual-core, .orbit-tag, .visual-caption, .dashboard-link, .brand, .sidebar-toggle { color: #FFFFFF; }
-.sidebar-close { min-height: 44px; text-align: right; font-size: 13px; }
+@layer base {
+  body {
+    color: #ffffff;
+  }
+  button {
+    color: inherit;
+  }
+}
+.with-sidebar {
+  color: #ffffff;
+}
+.dashboard-page h1,
+.dashboard-page h2,
+.dashboard-page h3,
+.dashboard-page b,
+.visual-core,
+.orbit-tag,
+.visual-caption,
+.dashboard-link,
+.brand,
+.sidebar-toggle {
+  color: #ffffff;
+}
+.sidebar-close {
+  min-height: 44px;
+  text-align: right;
+  font-size: 13px;
+}

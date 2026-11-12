@@ -52,8 +52,8 @@ npm run typecheck:e2e
 3. Confirmación de mentoría, entrega de enlace, persistencia intermedia y constancia únicamente después de RMP.
 4. Entrada `R M P`, normalización a RMP, pasos q0 → q1 → q2 → q3, doble estado de aceptación, borde magenta, texto blanco y resplandor. Persistencia del simulador sin certificar equipos.
 5. Entrada `R P`, ejecución automática, rechazo qerr, alerta visual magenta, historial y reinicio a q0.
-7. Portada con visión y proyección, registro separado, navegación lateral y ausencia de desbordamiento horizontal.
-6. Cadena vacía con controles deshabilitados y `RMPX`, que no debe aceptarse aunque transite temporalmente por q3.
+6. Portada con visión y proyección, registro separado, navegación lateral y ausencia de desbordamiento horizontal.
+7. Cadena vacía con controles deshabilitados y `RMPX`, que no debe aceptarse aunque transite temporalmente por q3.
 
 Se ejecutan los siete casos en cinco proyectos: Chromium, Firefox, WebKit, Android (Chromium con perfil Pixel 7) e iOS (WebKit con perfil iPhone 13): 35 ejecuciones. Los perfiles móviles simulan pantalla, entrada táctil y agente de usuario; no sustituyen pruebas físicas en teléfonos ni prueban una aplicación nativa.
 

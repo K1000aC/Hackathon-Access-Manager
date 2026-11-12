@@ -56,3 +56,5 @@ npx playwright install chromium firefox webkit
 npm run test:e2e
 npm run test:e2e:report
 ```
+
+La portada Inicio presenta el proyecto, la visión, la proyección y la acreditación del evento. El registro tiene una pantalla separada. La navegación lateral permanece visible en escritorio y se abre como menú en pantallas pequeñas; el fondo animado respeta movimiento reducido.

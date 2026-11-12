@@ -178,7 +178,7 @@ test("dashboard: registro separado, logo, navegación lateral y sin desbordamien
   page,
 }, testInfo) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText("TRANSFORMA.");
-  await expect(page.getByRole("heading", {level:1})).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("color", "rgb(255, 255, 255)");
   await expect(page.getByText("HUB CENTRAL", { exact: true })).toBeVisible();
   await expect(page.getByText("64 EQUIPOS", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Un evento conectado" })).toBeVisible();
